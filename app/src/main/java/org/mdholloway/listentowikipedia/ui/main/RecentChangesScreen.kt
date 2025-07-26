@@ -25,8 +25,13 @@ import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.text.style.TextOverflow
+
 
 // Data class to hold the information for a circle to be displayed
 data class DisplayCircle(
@@ -41,7 +46,7 @@ data class DisplayCircle(
 
 // Helper function to check if a string is an IP address
 fun isIpAddress(input: String): Boolean {
-    val ipv4Pattern = "^(?:[0-9]{1,3}\\.)+\\d{1,3}$".toRegex()
+    val ipv4Pattern = "^([0-9]{1,3}\\.)+\\d{1,3}$".toRegex()
     val ipv6Pattern = "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$".toRegex()
     return input.matches(ipv4Pattern) || input.matches(ipv6Pattern)
 }
@@ -114,15 +119,21 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: Lis
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
             ) {
-                items(recentChangeTexts) { text ->
+                itemsIndexed(recentChangeTexts) { index, text ->
+                    val textAlpha = when (index) {
+                        0 -> 0.5f // Most recent
+                        1 -> 0.3f  // Second most recent
+                        2 -> 0.1f // Third most recent
+                        else -> 0.0f // Should not happen with MAX_DISPLAY_MESSAGES = 3
+                    }
                     Text(
                         text = text,
-                        color = Color.White.copy(alpha = 0.5f),
+                        color = Color.White.copy(alpha = textAlpha),
                         style = MaterialTheme.typography.labelSmall,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 3.dp)
+                            .padding(vertical = 2.dp)
                     )
                 }
             }
