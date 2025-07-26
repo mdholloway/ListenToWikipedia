@@ -6,7 +6,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,16 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import java.util.UUID
 import kotlin.random.Random
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 
 // Data class to hold the information for a circle to be displayed
 data class DisplayCircle(
@@ -41,13 +41,13 @@ data class DisplayCircle(
 
 // Helper function to check if a string is an IP address
 fun isIpAddress(input: String): Boolean {
-    val ipv4Pattern = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$".toRegex()
-    val ipv6Pattern = "^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$".toRegex()
+    val ipv4Pattern = "^(?:[0-9]{1,3}\\.)+\\d{1,3}$".toRegex()
+    val ipv6Pattern = "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$".toRegex()
     return input.matches(ipv4Pattern) || input.matches(ipv6Pattern)
 }
 
 @Composable
-fun RecentChangesScreen(recentChange: RecentChangeEvent?) {
+fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: List<String>) {
     val circles = remember { mutableStateListOf<DisplayCircle>() }
 
     // Duration for which a circle stays on screen (in milliseconds)
@@ -98,22 +98,42 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?) {
             .fillMaxSize()
             .background(Color(0xFF0D1B2A)) // Dark blue background
     ) {
-        val configuration = LocalConfiguration.current
-        val screenWidthDp = configuration.screenWidthDp.dp
-        val screenHeightDp = configuration.screenHeightDp.dp
-
         circles.forEach { displayCircle ->
-            AnimatedCircleWithText(displayCircle, DISPLAY_DURATION_MILLIS, screenWidthDp, screenHeightDp)
+            AnimatedCircle(displayCircle, DISPLAY_DURATION_MILLIS)
+        }
+
+        // Text overlay at the bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp) // Adjust padding as needed
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            ) {
+                items(recentChangeTexts) { text ->
+                    Text(
+                        text = text,
+                        color = Color.White.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun AnimatedCircleWithText(
+private fun AnimatedCircle(
     displayCircle: DisplayCircle,
-    displayDurationMillis: Long,
-    screenWidthDp: Dp,
-    screenHeightDp: Dp
+    displayDurationMillis: Long
 ) {
     val animatedAlpha by animateFloatAsState(
         targetValue = if (System.currentTimeMillis() - displayCircle.createdAt < displayDurationMillis) 0.55f else 0f,
@@ -127,32 +147,6 @@ private fun AnimatedCircleWithText(
             center = Offset(size.width * displayCircle.x, size.height * displayCircle.y),
             radius = displayCircle.radius,
             alpha = animatedAlpha
-        )
-    }
-
-    // Overlay Text
-    val offsetX_dp = (displayCircle.x * screenWidthDp.value).dp
-    val offsetY_dp = (displayCircle.y * screenHeightDp.value).dp
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .offset(x = offsetX_dp, y = offsetY_dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = displayCircle.event.title,
-            color = Color.White.copy(alpha = animatedAlpha),
-            fontSize = (displayCircle.radius / 3).sp, // Adjust font size based on circle size
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.offset(
-                // No additional offset needed here as Box is already positioned
-                // Ensure text is centered within the circle
-                x = (-displayCircle.radius / 2).dp, // Roughly center based on radius
-                y = (-displayCircle.radius / 2).dp
-            )
         )
     }
 }

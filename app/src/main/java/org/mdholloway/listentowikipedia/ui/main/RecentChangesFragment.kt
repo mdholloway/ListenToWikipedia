@@ -21,7 +21,11 @@ class RecentChangesFragment : Fragment() {
             setContent {
                 val viewModel = ViewModelProvider(this@RecentChangesFragment).get(RecentChangesViewModel::class.java)
                 val latestRecentChangeEvent = viewModel.latestRecentChangeEvent.observeAsState().value
-                RecentChangesScreen(recentChange = latestRecentChangeEvent)
+                val recentChangeTextList = viewModel.recentChangeTextList.observeAsState(initial = emptyList()).value
+                RecentChangesScreen(
+                    recentChange = latestRecentChangeEvent,
+                    recentChangeTexts = recentChangeTextList
+                )
                 viewModel.startListeningToRecentChanges()
             }
         }
