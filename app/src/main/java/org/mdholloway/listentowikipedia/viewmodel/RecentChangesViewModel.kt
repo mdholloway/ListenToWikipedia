@@ -9,7 +9,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import org.mdholloway.listentowikipedia.network.RecentChangesSseService
 
 class RecentChangesViewModel : ViewModel() {
@@ -18,9 +17,8 @@ class RecentChangesViewModel : ViewModel() {
         private const val TAG = "RecentChangesViewModel"
     }
 
-    // LiveData to hold a list of changes for a RecyclerView
-    private val _recentChangesList = MutableLiveData<List<RecentChangeEvent>>(emptyList())
-    val recentChangesList: LiveData<List<RecentChangeEvent>> = _recentChangesList
+    private val _recentChangesList = MutableLiveData<List<String>>(emptyList())
+    val recentChangesList: LiveData<List<String>> = _recentChangesList
 
     private val sseService = RecentChangesSseService()
     private var recentChangesJob: Job? = null
@@ -29,16 +27,16 @@ class RecentChangesViewModel : ViewModel() {
         if (recentChangesJob?.isActive == true) return
 
         recentChangesJob = sseService.listenToRecentChanges()
-            .onEach { rc ->
-                if (rc.wiki == "enwiki" && rc.namespace == 0 && rc.type == "edit") {
-                    val diff = rc.length!!.new - (rc.length.old ?: 0)
-                    if (diff > 0) {
-                        Log.d(TAG, "${rc.user} added $diff bytes to ${rc.title}")
-                        // _latestChange.postValue("${rc.user} added $diff bytes to ${rc.title}")
-                    } else if (diff < 0) {
-                        Log.d(TAG, "${rc.user} removed ${-diff} bytes from ${rc.title}")
-                        // _latestChange.postValue("${rc.user} removed $diff bytes from ${rc.title}")
+            .onEach { event ->
+                if (event.wiki == "enwiki" && event.namespace == 0 && event.type == "edit") {
+                    val diff = (event.length?.new ?: 0) - (event.length?.old ?: 0)
+                    val description = when {
+                        diff > 0 -> "${event.user} added $diff bytes to ${event.title}"
+                        diff < 0 -> "${event.user} removed ${-diff} bytes from ${event.title}"
+                        else -> "${event.user} edited ${event.title} (no size change)"
                     }
+                    val currentList = _recentChangesList.value ?: emptyList()
+                    _recentChangesList.postValue(listOf(description) + currentList.take(19))
                 }
             }
             .catch { e ->

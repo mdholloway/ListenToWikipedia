@@ -4,17 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import org.mdholloway.listentowikipedia.R
 import org.mdholloway.listentowikipedia.databinding.FragmentTransformBinding
 import org.mdholloway.listentowikipedia.databinding.ItemTransformBinding
+import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
 
 /**
  * Fragment that demonstrates a responsive layout pattern where the format of the content
@@ -35,16 +33,19 @@ class TransformFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val transformViewModel = ViewModelProvider(this).get(TransformViewModel::class.java)
+        val viewModel = ViewModelProvider(this).get(RecentChangesViewModel::class.java)
         _binding = FragmentTransformBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         val recyclerView = binding.recyclerviewTransform
         val adapter = TransformAdapter()
         recyclerView.adapter = adapter
-        transformViewModel.texts.observe(viewLifecycleOwner) {
-            adapter.submitList(it)
+
+        viewModel.recentChangesList.observe(viewLifecycleOwner) { list ->
+            adapter.submitList(list)
         }
+        viewModel.startListeningToRecentChanges()
+
         return root
     }
 
@@ -55,32 +56,12 @@ class TransformFragment : Fragment() {
 
     class TransformAdapter :
         ListAdapter<String, TransformViewHolder>(object : DiffUtil.ItemCallback<String>() {
-
             override fun areItemsTheSame(oldItem: String, newItem: String): Boolean =
                 oldItem == newItem
 
             override fun areContentsTheSame(oldItem: String, newItem: String): Boolean =
                 oldItem == newItem
         }) {
-
-        private val drawables = listOf(
-            R.drawable.avatar_1,
-            R.drawable.avatar_2,
-            R.drawable.avatar_3,
-            R.drawable.avatar_4,
-            R.drawable.avatar_5,
-            R.drawable.avatar_6,
-            R.drawable.avatar_7,
-            R.drawable.avatar_8,
-            R.drawable.avatar_9,
-            R.drawable.avatar_10,
-            R.drawable.avatar_11,
-            R.drawable.avatar_12,
-            R.drawable.avatar_13,
-            R.drawable.avatar_14,
-            R.drawable.avatar_15,
-            R.drawable.avatar_16,
-        )
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransformViewHolder {
             val binding = ItemTransformBinding.inflate(LayoutInflater.from(parent.context))
@@ -89,16 +70,11 @@ class TransformFragment : Fragment() {
 
         override fun onBindViewHolder(holder: TransformViewHolder, position: Int) {
             holder.textView.text = getItem(position)
-            holder.imageView.setImageDrawable(
-                ResourcesCompat.getDrawable(holder.imageView.resources, drawables[position], null)
-            )
         }
     }
 
     class TransformViewHolder(binding: ItemTransformBinding) :
         RecyclerView.ViewHolder(binding.root) {
-
-        val imageView: ImageView = binding.imageViewItemTransform
         val textView: TextView = binding.textViewItemTransform
     }
 }

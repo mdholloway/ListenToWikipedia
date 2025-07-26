@@ -12,31 +12,18 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import org.mdholloway.listentowikipedia.databinding.ActivityMainBinding
-import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-    private lateinit var viewModel: RecentChangesViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.appBarMain.toolbar)
-
-        viewModel =
-            ViewModelProvider(this).get(RecentChangesViewModel::class.java)
-
-        /* viewModel.latestChange.observe(this) { changeDescription ->
-            // Update your UI (e.g., a TextView)
-            // myTextView.text = changeDescription
-            println("UI Update: $changeDescription")
-        } */
-        viewModel.startListeningToRecentChanges()
 
         binding.appBarMain.fab?.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
