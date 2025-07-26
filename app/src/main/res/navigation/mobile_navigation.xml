@@ -3,25 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_transform">
+    app:startDestination="@+id/nav_recentchanges">
 
     <fragment
-        android:id="@+id/nav_transform"
-        android:name="org.mdholloway.listentowikipedia.ui.transform.TransformFragment"
-        android:label="@string/menu_transform"
-        tools:layout="@layout/fragment_transform" />
-
-    <fragment
-        android:id="@+id/nav_reflow"
-        android:name="org.mdholloway.listentowikipedia.ui.reflow.ReflowFragment"
-        android:label="@string/menu_reflow"
-        tools:layout="@layout/fragment_reflow" />
-
-    <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="org.mdholloway.listentowikipedia.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_recentchanges"
+        android:name="org.mdholloway.listentowikipedia.ui.main.RecentChangesFragment"
+        android:label="@string/menu_recent_changes"
+        tools:layout="@layout/fragment_recent_changes" />
 
     <fragment
         android:id="@+id/nav_settings"

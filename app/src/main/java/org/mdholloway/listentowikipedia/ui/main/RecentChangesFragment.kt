@@ -1,4 +1,4 @@
-package org.mdholloway.listentowikipedia.ui.transform
+package org.mdholloway.listentowikipedia.ui.main
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,19 +10,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import org.mdholloway.listentowikipedia.databinding.FragmentTransformBinding
-import org.mdholloway.listentowikipedia.databinding.ItemTransformBinding
+import org.mdholloway.listentowikipedia.databinding.FragmentRecentChangesBinding
+import org.mdholloway.listentowikipedia.databinding.ItemRecentChangesBinding
 import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
 
-/**
- * Fragment that demonstrates a responsive layout pattern where the format of the content
- * transforms depending on the size of the screen. Specifically this Fragment shows items in
- * the [RecyclerView] using LinearLayoutManager in a small screen
- * and shows items using GridLayoutManager in a large screen.
- */
-class TransformFragment : Fragment() {
+class RecentChangesFragment : Fragment() {
 
-    private var _binding: FragmentTransformBinding? = null
+    private var _binding: FragmentRecentChangesBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -34,11 +28,11 @@ class TransformFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val viewModel = ViewModelProvider(this).get(RecentChangesViewModel::class.java)
-        _binding = FragmentTransformBinding.inflate(inflater, container, false)
+        _binding = FragmentRecentChangesBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         val recyclerView = binding.recyclerviewTransform
-        val adapter = TransformAdapter()
+        val adapter = RecentChangesAdapter()
         recyclerView.adapter = adapter
 
         viewModel.recentChangesList.observe(viewLifecycleOwner) { list ->
@@ -54,8 +48,8 @@ class TransformFragment : Fragment() {
         _binding = null
     }
 
-    class TransformAdapter :
-        ListAdapter<String, TransformViewHolder>(object : DiffUtil.ItemCallback<String>() {
+    class RecentChangesAdapter :
+        ListAdapter<String, RecentChangesViewHolder>(object : DiffUtil.ItemCallback<String>() {
             override fun areItemsTheSame(oldItem: String, newItem: String): Boolean =
                 oldItem == newItem
 
@@ -63,17 +57,17 @@ class TransformFragment : Fragment() {
                 oldItem == newItem
         }) {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransformViewHolder {
-            val binding = ItemTransformBinding.inflate(LayoutInflater.from(parent.context))
-            return TransformViewHolder(binding)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecentChangesViewHolder {
+            val binding = ItemRecentChangesBinding.inflate(LayoutInflater.from(parent.context))
+            return RecentChangesViewHolder(binding)
         }
 
-        override fun onBindViewHolder(holder: TransformViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: RecentChangesViewHolder, position: Int) {
             holder.textView.text = getItem(position)
         }
     }
 
-    class TransformViewHolder(binding: ItemTransformBinding) :
+    class RecentChangesViewHolder(binding: ItemRecentChangesBinding) :
         RecyclerView.ViewHolder(binding.root) {
         val textView: TextView = binding.textViewItemTransform
     }
