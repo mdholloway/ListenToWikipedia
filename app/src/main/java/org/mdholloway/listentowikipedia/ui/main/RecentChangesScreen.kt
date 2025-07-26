@@ -59,7 +59,7 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?) {
             val id = UUID.randomUUID().toString()
 
             val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-            val radius = (10.dp + (diff / 10).coerceAtMost(100).dp).value // Scale diff to radius
+            val radius = diff.coerceAtMost(240).dp.value // Scale diff to radius
 
             val color = when {
                 event.bot -> Color(0xFF8A2BE2) // Purple for bots
@@ -116,7 +116,7 @@ private fun AnimatedCircleWithText(
     screenHeightDp: Dp
 ) {
     val animatedAlpha by animateFloatAsState(
-        targetValue = if (System.currentTimeMillis() - displayCircle.createdAt < displayDurationMillis) 0.6f else 0f,
+        targetValue = if (System.currentTimeMillis() - displayCircle.createdAt < displayDurationMillis) 0.55f else 0f,
         animationSpec = tween(durationMillis = 1000), label = "alphaAnimation"
     )
 
