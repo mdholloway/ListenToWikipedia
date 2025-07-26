@@ -17,7 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
@@ -38,7 +41,7 @@ data class DisplayCircle(
 
 // Helper function to check if a string is an IP address
 fun isIpAddress(input: String): Boolean {
-    val ipv4Pattern = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$".toRegex()
+    val ipv4Pattern = "^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$".toRegex()
     val ipv6Pattern = "^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$".toRegex()
     return input.matches(ipv4Pattern) || input.matches(ipv6Pattern)
 }
@@ -113,20 +116,25 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?) {
         }
 
         // Overlay text (titles)
+        val density = LocalDensity.current
+        val configuration = LocalConfiguration.current
+        val screenWidthDp = configuration.screenWidthDp.dp
+        val screenHeightDp = configuration.screenHeightDp.dp
+
         circles.forEach { displayCircle ->
             val animatedAlpha by animateFloatAsState(
                 targetValue = if (System.currentTimeMillis() - displayCircle.createdAt < DISPLAY_DURATION_MILLIS) 1f else 0f,
                 animationSpec = tween(durationMillis = 1000), label = "textAlphaAnimation"
             )
 
-            // Position text relative to the circle
+            // Calculate text position in Dp relative to the circle's normalized coordinates
+            val offsetX_dp = (displayCircle.x * screenWidthDp.value).dp
+            val offsetY_dp = (displayCircle.y * screenHeightDp.value).dp
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .offset(
-                        x = (displayCircle.x * this.density - displayCircle.radius).dp,
-                        y = (displayCircle.y * this.density - displayCircle.radius).dp
-                    ),
+                    .offset(x = offsetX_dp, y = offsetY_dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -134,9 +142,13 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?) {
                     color = Color.White.copy(alpha = animatedAlpha),
                     fontSize = (displayCircle.radius / 3).sp, // Adjust font size based on circle size
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.offset(
-                        x = (displayCircle.x * this.density).dp, // Adjust text position based on circle center
-                        y = (displayCircle.y * this.density).dp
+                        // No additional offset needed here as Box is already positioned
+                        // Ensure text is centered within the circle
+                        x = (-displayCircle.radius / 2).dp, // Roughly center based on radius
+                        y = (-displayCircle.radius / 2).dp
                     )
                 )
             }
