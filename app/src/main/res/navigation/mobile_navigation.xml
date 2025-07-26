@@ -8,8 +8,7 @@
     <fragment
         android:id="@+id/nav_recentchanges"
         android:name="org.mdholloway.listentowikipedia.ui.main.RecentChangesFragment"
-        android:label="@string/menu_recent_changes"
-        tools:layout="@layout/fragment_recent_changes" />
+        android:label="@string/menu_recent_changes" />
 
     <fragment
         android:id="@+id/nav_settings"
