@@ -116,7 +116,7 @@ private fun AnimatedCircleWithText(
     screenHeightDp: Dp
 ) {
     val animatedAlpha by animateFloatAsState(
-        targetValue = if (System.currentTimeMillis() - displayCircle.createdAt < displayDurationMillis) 1f else 0f,
+        targetValue = if (System.currentTimeMillis() - displayCircle.createdAt < displayDurationMillis) 0.6f else 0f,
         animationSpec = tween(durationMillis = 1000), label = "alphaAnimation"
     )
 
