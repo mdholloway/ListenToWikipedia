@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -99,7 +98,6 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?) {
             .fillMaxSize()
             .background(Color(0xFF0D1B2A)) // Dark blue background
     ) {
-        val density = LocalDensity.current
         val configuration = LocalConfiguration.current
         val screenWidthDp = configuration.screenWidthDp.dp
         val screenHeightDp = configuration.screenHeightDp.dp
