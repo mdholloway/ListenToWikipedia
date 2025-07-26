@@ -20,9 +20,9 @@ class RecentChangesFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 val viewModel = ViewModelProvider(this@RecentChangesFragment).get(RecentChangesViewModel::class.java)
-                val recentChangesList = viewModel.recentChangesList.observeAsState(initial = emptyList()).value
+                val latestRecentChangeEvent = viewModel.latestRecentChangeEvent.observeAsState().value
 
-                RecentChangesScreen(recentChanges = recentChangesList)
+                RecentChangesScreen(recentChange = latestRecentChangeEvent)
 
                 viewModel.startListeningToRecentChanges()
             }

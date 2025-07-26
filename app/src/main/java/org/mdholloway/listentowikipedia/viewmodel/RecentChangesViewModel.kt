@@ -18,8 +18,8 @@ class RecentChangesViewModel : ViewModel() {
         private const val TAG = "RecentChangesViewModel"
     }
 
-    private val _recentChangesList = MutableLiveData<List<RecentChangeEvent>>(emptyList())
-    val recentChangesList: LiveData<List<RecentChangeEvent>> = _recentChangesList
+    private val _latestRecentChangeEvent = MutableLiveData<RecentChangeEvent?>(null)
+    val latestRecentChangeEvent: LiveData<RecentChangeEvent?> = _latestRecentChangeEvent
 
     private val sseService = RecentChangesSseService()
     private var recentChangesJob: Job? = null
@@ -30,8 +30,7 @@ class RecentChangesViewModel : ViewModel() {
         recentChangesJob = sseService.listenToRecentChanges()
             .onEach { event ->
                 if (event.wiki == "enwiki" && event.namespace == 0 && event.type == "edit") {
-                    val currentList = _recentChangesList.value ?: emptyList()
-                    _recentChangesList.postValue(listOf(event) + currentList.take(19))
+                    _latestRecentChangeEvent.postValue(event)
                 }
             }
             .catch { e ->
