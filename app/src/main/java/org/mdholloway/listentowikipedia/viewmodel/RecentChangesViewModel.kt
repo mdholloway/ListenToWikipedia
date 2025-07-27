@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.mdholloway.listentowikipedia.network.RecentChangesSseService
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
+import org.mdholloway.listentowikipedia.audio.OboeAudioPlayer
 import kotlin.math.abs
 
 class RecentChangesViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,6 +30,7 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
 
     private val sseService = RecentChangesSseService(application.applicationContext)
     private var recentChangesJob: Job? = null
+    private val oboeAudioPlayer = OboeAudioPlayer()
 
     fun startListeningToRecentChanges() {
         if (recentChangesJob?.isActive == true) return
@@ -38,6 +40,14 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
                 if (event.wiki == "enwiki" && event.namespace == 0 && event.type == "edit") {
                     _latestRecentChangeEvent.postValue(event)
                     addEventToTextList(event)
+                    
+                    // Play sound
+                    val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
+                    oboeAudioPlayer.playEventSound(
+                        diff = diff,
+                        isBot = event.bot,
+                        isIpAddress = isIpAddress(event.user)
+                    )
                 }
             }
             .catch { e ->
@@ -75,5 +85,13 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
         super.onCleared()
         stopListeningToRecentChanges()
         sseService.close()
+        oboeAudioPlayer.release()
+    }
+    
+    // Helper function to check if a string is an IP address
+    private fun isIpAddress(input: String): Boolean {
+        val ipv4Pattern = "^([0-9]{1,3}\\.)+\\d{1,3}$".toRegex()
+        val ipv6Pattern = "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$".toRegex()
+        return input.matches(ipv4Pattern) || input.matches(ipv6Pattern)
     }
 }
