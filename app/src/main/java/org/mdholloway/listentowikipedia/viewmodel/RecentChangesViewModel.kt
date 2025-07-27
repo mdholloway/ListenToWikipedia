@@ -1,9 +1,10 @@
 package org.mdholloway.listentowikipedia.viewmodel
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
@@ -11,8 +12,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.mdholloway.listentowikipedia.network.RecentChangesSseService
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
+import kotlin.math.abs
 
-class RecentChangesViewModel : ViewModel() {
+class RecentChangesViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "RecentChangesViewModel"
@@ -25,7 +27,7 @@ class RecentChangesViewModel : ViewModel() {
     private val _recentChangeTextList = MutableLiveData<List<String>>(emptyList())
     val recentChangeTextList: LiveData<List<String>> = _recentChangeTextList
 
-    private val sseService = RecentChangesSseService()
+    private val sseService = RecentChangesSseService(application.applicationContext)
     private var recentChangesJob: Job? = null
 
     fun startListeningToRecentChanges() {
@@ -56,9 +58,12 @@ class RecentChangesViewModel : ViewModel() {
 
     private fun formatRecentChangeEventForDisplay(event: RecentChangeEvent): String {
         val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-        val action = if (diff >= 0) "added" else "removed"
-        val bytes = Math.abs(diff)
-        return "${event.user} $action $bytes bytes to ${event.title}"
+        val bytes = abs(diff)
+        if (diff >= 0) {
+            return "${event.user} added $bytes bytes to ${event.title}"
+        } else {
+            return "${event.user} removed $bytes bytes from ${event.title}"
+        }
     }
 
     fun stopListeningToRecentChanges() {
