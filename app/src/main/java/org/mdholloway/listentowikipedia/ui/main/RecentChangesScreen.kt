@@ -27,11 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.text.style.TextOverflow
-
 
 // Data class to hold the information for a circle to be displayed
 data class DisplayCircle(
