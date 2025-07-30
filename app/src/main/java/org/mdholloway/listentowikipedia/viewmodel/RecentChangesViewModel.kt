@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.mdholloway.listentowikipedia.network.RecentChangesSseService
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
-import org.mdholloway.listentowikipedia.audio.OboeAudioPlayer
+import org.mdholloway.listentowikipedia.audio.AudioEngine
 import kotlin.math.abs
 
 class RecentChangesViewModel(application: Application) : AndroidViewModel(application) {
@@ -30,7 +30,7 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
 
     private val sseService = RecentChangesSseService(application.applicationContext)
     private var recentChangesJob: Job? = null
-    private val oboeAudioPlayer = OboeAudioPlayer()
+    private val oboeAudioPlayer = AudioEngine()
 
     fun startListeningToRecentChanges() {
         if (recentChangesJob?.isActive == true) return
@@ -43,11 +43,7 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
                     
                     // Play sound
                     val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-                    oboeAudioPlayer.playEventSound(
-                        diff = diff,
-                        isBot = event.bot,
-                        isIpAddress = isIpAddress(event.user)
-                    )
+                    oboeAudioPlayer.triggerMarimbaNote(diff)
                 }
             }
             .catch { e ->

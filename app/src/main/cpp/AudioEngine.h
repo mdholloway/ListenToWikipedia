@@ -1,18 +1,21 @@
-#ifndef OBOE_SIMPLEOBOEPLAYER_H
-#define OBOE_SIMPLEOBOEPLAYER_H
+#ifndef OBOE_AUDIOENGINE_H
+#define OBOE_AUDIOENGINE_H
 
 #include <oboe/Oboe.h>
 #include <mutex>
 #include <chrono>
+#include "MarimbaVoice.h"
+//#include "NylonGuitarVoice.h"
 
-class SimpleOboePlayer : public oboe::AudioStreamCallback {
+class AudioEngine : public oboe::AudioStreamCallback {
 public:
-    SimpleOboePlayer();
-    ~SimpleOboePlayer();
+    AudioEngine();
+    ~AudioEngine();
 
     void start();
     void stop();
-    void playEventSound(int diff, bool isBot, bool isIpAddress);
+    void triggerMarimbaNote(int diff);
+    //void triggerNylonGuitarNote(int diff);
 
     // Oboe AudioStreamCallback overrides
     oboe::DataCallbackResult onAudioReady(
@@ -28,15 +31,11 @@ public:
 
 private:
     oboe::ManagedStream mAudioStream;
-    double mPhase;
-    double mFrequency;
-    double mAmplitude;
     std::mutex mLock;
-    std::chrono::time_point<std::chrono::system_clock> mSoundStartTime;
-    long mSoundDurationMillis;
-    int mWaveformType; // 0: Sine, 1: Square, 2: Triangle
+    //std::vector<std::unique_ptr<NylonGuitarVoice>> nylonGuitarVoices;
+    std::vector<std::unique_ptr<MarimbaVoice>> marimbaVoices;
 
     void setupAudioStream();
 }; 
 
-#endif //OBOE_SIMPLEOBOEPLAYER_H
+#endif //OBOE_AUDIOENGINE_H
