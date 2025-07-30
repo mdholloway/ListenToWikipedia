@@ -6,13 +6,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.DspFaust.DspFaust
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.mdholloway.listentowikipedia.network.RecentChangesSseService
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
-import org.mdholloway.listentowikipedia.audio.OboeAudioPlayer
 import kotlin.math.abs
 
 class RecentChangesViewModel(application: Application) : AndroidViewModel(application) {
@@ -30,10 +30,16 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
 
     private val sseService = RecentChangesSseService(application.applicationContext)
     private var recentChangesJob: Job? = null
-    private val oboeAudioPlayer = OboeAudioPlayer()
+    private val dsp = DspFaust(48000, 128)
 
     fun startListeningToRecentChanges() {
         if (recentChangesJob?.isActive == true) return
+        dsp.start()
+        dsp.setParamValue("/gain", 0.5f)
+        dsp.setParamValue("/strikePosition", 0.0f)
+        dsp.setParamValue("/strikeCutoff", 7000.0f)
+        dsp.setParamValue("/strikeSharpness", 0.25f)
+        dsp.setParamValue("/freq", 500.0f)
 
         recentChangesJob = sseService.listenToRecentChanges()
             .onEach { event ->
@@ -43,11 +49,7 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
                     
                     // Play sound
                     val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-                    oboeAudioPlayer.playEventSound(
-                        diff = diff,
-                        isBot = event.bot,
-                        isIpAddress = isIpAddress(event.user)
-                    )
+                    dsp.setParamValue("/trigger", 1.0f)
                 }
             }
             .catch { e ->
@@ -84,8 +86,8 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
     override fun onCleared() {
         super.onCleared()
         stopListeningToRecentChanges()
+        dsp.stop()
         sseService.close()
-        oboeAudioPlayer.release()
     }
     
     // Helper function to check if a string is an IP address
