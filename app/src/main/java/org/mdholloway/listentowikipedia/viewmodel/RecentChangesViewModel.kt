@@ -8,12 +8,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.DspFaust.DspFaust
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import org.mdholloway.listentowikipedia.network.RecentChangesSseService
+import kotlinx.coroutines.launch
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
+import org.mdholloway.listentowikipedia.network.RecentChangesSseService
 import kotlin.math.abs
+import kotlin.math.exp
+import kotlin.math.ln
 
 class RecentChangesViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -30,26 +34,86 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
 
     private val sseService = RecentChangesSseService(application.applicationContext)
     private var recentChangesJob: Job? = null
-    private val dsp = DspFaust(48000, 128)
+    private val dsp = DspFaust()
 
     fun startListeningToRecentChanges() {
-        if (recentChangesJob?.isActive == true) return
-        dsp.start()
-        dsp.setParamValue("/gain", 0.5f)
-        dsp.setParamValue("/strikePosition", 0.0f)
-        dsp.setParamValue("/strikeCutoff", 7000.0f)
-        dsp.setParamValue("/strikeSharpness", 0.25f)
-        dsp.setParamValue("/freq", 500.0f)
+        if (recentChangesJob?.isActive == true) {
+            Log.d(TAG, "Already listening to recent changes, skipping start.")
+            return
+        }
+
+        // Attempt to start the DspFaust audio engine
+        val started = dsp.start()
+        if (!started) {
+            Log.e(TAG, "DspFaust failed to start audio engine! Check RECORD_AUDIO permission and device state.")
+            // Do not proceed if the audio engine couldn't start
+            return
+        }
+        Log.i(TAG, "DspFaust audio engine started successfully.")
+
+        // Set global parameters (these apply to all voices, unless overridden per voice)
+        /* dsp.setParamValue("/Polyphonic/Voices/marimba/gain", 1.0f)
+        dsp.setParamValue("/Polyphonic/Voices/marimba/exPos", 0.5f)
+        dsp.setParamValue("/Polyphonic/Voices/marimba/exPos2", 1.0f)
+        dsp.setParamValue("/Polyphonic/Voices/marimba/sharpness", 0.5f) */
+
+        // --- TEMPORARY TEST: Play a fixed tone to confirm audio output ---
+        viewModelScope.launch {
+            Log.d(TAG, "Attempting to play a test tone for 1 second")
+            //val testVoiceAddress = dsp.newVoice()
+            //if (testVoiceAddress != 0L) {
+                //dsp.setVoiceParamValue("/marimba/freq", testVoiceAddress, 440.0f) // A4 note
+                //dsp.setVoiceParamValue("/marimba/gain", testVoiceAddress, 0.8f) // High gain for testing
+                dsp.setParamValue("/synth/gate", 1.0f) // Gate ON
+                Log.d(TAG, "Test tone triggered")
+                delay(1000) // Play for 1 second
+                dsp.setParamValue("/synth/gate", 0.0f) // Gate OFF
+                //dsp.deleteVoice(testVoiceAddress) // Delete the voice
+                Log.d(TAG, "Test tone finished")
+            //} else {
+            //    Log.e(TAG, "Failed to allocate test voice.")
+            //}
+        }
+        // --- END TEMPORARY TEST ---
 
         recentChangesJob = sseService.listenToRecentChanges()
             .onEach { event ->
                 if (event.wiki == "enwiki" && event.namespace == 0 && event.type == "edit") {
                     _latestRecentChangeEvent.postValue(event)
                     addEventToTextList(event)
-                    
-                    // Play sound
-                    val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-                    dsp.setParamValue("/trigger", 1.0f)
+
+                    // Calculate frequency based on byte difference
+                    //val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
+                    //val freq = calculateFrequencyFromBytes(diff) // Implement this function below
+
+                   // val voiceAddress = dsp.newVoice()
+                    //if (voiceAddress != 0L) { // Check if a voice was successfully allocated
+                        //Log.d(TAG, "New Faust voice allocated: $voiceAddress for event: ${event.title}")
+
+                        // 5. Set parameters for the *individual voice*
+                        //dsp.setVoiceParamValue("/marimba/freq", voiceAddress, freq)
+                        //dsp.setVoiceParamValue("/marimba/gain", voiceAddress, 1.0f) // Set voice-specific gain
+                        //dsp.setVoiceParamValue("/marimba/gate", voiceAddress, 1.0f) // Trigger the sound (gate ON)
+
+                        //Log.d(TAG, "Triggering sound for ${event.title} with freq: $freq Hz, gate ON.")
+
+                        // 2. CRITICAL: Turn the gate OFF after a short delay
+                        // This allows the Faust instrument's internal envelope to play out
+                        // and makes the voice available for reuse.
+                        //viewModelScope.launch {
+                            //delay(500) // Play sound for 0.5 seconds. Adjust this duration as needed.
+                            //dsp.setVoiceParamValue("/marimba/gate", voiceAddress, 0.0f) // Gate OFF
+                            //Log.d(TAG, "Released gate for voice: $voiceAddress")
+
+                            // Optionally, delete the voice if you want to explicitly manage voice pool.
+                            // If your Faust DSP handles voice recycling well with gate 0, you might not need to delete.
+                            // If you run out of voices, uncomment and try.
+                            // dsp.deleteVoice(voiceAddress)
+                            // Log.d(TAG, "Deleted voice: $voiceAddress")}
+                        //}
+                    //} else {
+                        //Log.e(TAG, "Failed to allocate new Faust voice. Is the DSP compiled with -nvoices and not out of voices?")
+                    //}
                 }
             }
             .catch { e ->
@@ -78,13 +142,39 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+
+    // Helper function to map byte differences to a musical frequency
+    private fun calculateFrequencyFromBytes(byteDiff: Int): Float {
+        val absDiff = abs(byteDiff).toFloat()
+
+        // Define your desired frequency range and byte difference range
+        val minBytes = 1f // Smallest diff you want to map
+        val maxBytes = 50000f // Largest diff you expect (cap to avoid extreme pitches)
+        val minFreq = 100f // C2, a low but audible frequency
+        val maxFreq = 2000f // C7, a high and clear frequency
+
+        // Clamp the byteDiff to stay within a reasonable range for mapping
+        val clampedDiff = absDiff.coerceIn(minBytes, maxBytes)
+
+        // Use logarithmic scaling for pitch perception
+        // Map clampedDiff (log scale) to normalized 0-1 range
+        val normalizedValue = (ln(clampedDiff) - ln(minBytes)) / (ln(maxBytes) - ln(minBytes))
+
+        // Map normalized 0-1 range to desired frequency range (log scale)
+        val logFreq = ln(minFreq) + normalizedValue * (ln(maxFreq) - ln(minFreq))
+
+        return exp(logFreq) // Convert back from log frequency to linear frequency
+    }
+
     fun stopListeningToRecentChanges() {
+        Log.i(TAG, "Stopping listening to recent changes and cancelling job.")
         recentChangesJob?.cancel()
         recentChangesJob = null
     }
 
     override fun onCleared() {
         super.onCleared()
+        Log.i(TAG, "ViewModel onCleared. Ensuring audio engine and SSE service are stopped.")
         stopListeningToRecentChanges()
         dsp.stop()
         sseService.close()

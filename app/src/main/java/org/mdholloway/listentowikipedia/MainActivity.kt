@@ -2,28 +2,60 @@ package org.mdholloway.listentowikipedia
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.mdholloway.listentowikipedia.ui.main.RecentChangesScreen
 import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
 
 class MainActivity : ComponentActivity() {
 
+    lateinit var attributionContext: Context
+
     private val recentChangesViewModel: RecentChangesViewModel by viewModels()
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.i("MainActivity", "RECORD_AUDIO permission granted. Starting audio service.")
+            // Permission granted, now it's safe to start listening
+            recentChangesViewModel.startListeningToRecentChanges()
+        } else {
+            Log.w("MainActivity", "RECORD_AUDIO permission denied. Audio features may not work.")
+            // Permission denied. You might want to show a message to the user.
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                arrayOf(Manifest.permission.RECORD_AUDIO),
-                999);
+        attributionContext = createAttributionContext("main")
+
+        // 2. Check and request permission on activity creation
+        when {
+            ContextCompat.checkSelfPermission(attributionContext, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> {
+                // Permission already granted, start immediately
+                Log.i("MainActivity", "RECORD_AUDIO permission already granted. Starting audio service.")
+                recentChangesViewModel.startListeningToRecentChanges()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) -> {
+                // Explain to the user why the permission is needed (optional, good practice)
+                Log.d("MainActivity", "Displaying rationale for RECORD_AUDIO permission.")
+                // You could show a dialog here before launching the request
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+            else -> {
+                // Directly request the permission
+                Log.d("MainActivity", "Requesting RECORD_AUDIO permission for the first time.")
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
         }
 
         setContent {
@@ -35,35 +67,11 @@ class MainActivity : ComponentActivity() {
                 recentChange = latestRecentChangeEvent,
                 recentChangeTexts = recentChangeTextList
             )
-            recentChangesViewModel.startListeningToRecentChanges()
         }
     }
 
-    @Deprecated("TODO: Use the Activity Result API")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(
-            requestCode,
-            permissions,
-            grantResults
-        ) // Crucial for fragments
-        when (requestCode) {
-            999 -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.isNotEmpty()
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                ) {
-                    // Permission was granted, yay!
-                    // You can now proceed with audio recording logic
-                } else {
-                    // Permission denied, boo! Disable the functionality that depends on this permission.
-                    // You might want to show a message to the user explaining why the permission is needed.
-                }
-                return
-            }
-        }
+    override fun onStop() {
+        super.onStop()
+        recentChangesViewModel.stopListeningToRecentChanges()
     }
 }
