@@ -9,7 +9,7 @@ class AudioEngine {
     private external fun initNativeAudioEngine()
     private external fun shutdownNativeAudioEngine()
     external fun triggerMarimbaNote(diff: Int)
-    external fun triggerNylonGuitarNote(diff: Int)
+    // external fun triggerNylonGuitarNote(diff: Int)
 
     fun release() {
         shutdownNativeAudioEngine()

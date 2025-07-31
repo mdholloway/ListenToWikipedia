@@ -25,7 +25,6 @@ target_link_libraries(
 )
 
 target_link_options(oboe_audio_player PRIVATE
-        #-Wl,--enable-lowest-address-first
         -Wl,-z,max-page-size=16384
         -Wl,-z,common-page-size=16384
 )
