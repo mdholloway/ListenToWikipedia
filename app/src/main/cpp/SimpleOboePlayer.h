@@ -6,7 +6,7 @@
 #include <oboe/Oboe.h>
 #include <mutex>
 #include <chrono>
-#include "synth.cpp"
+#include "StandardBell.cpp"
 
 class SimpleOboePlayer : public oboeaudio {
 public:
@@ -17,7 +17,7 @@ public:
 
 private:
     APIUI* mAudioController;
-    mydsp* mSynthDSP;
+    mydsp* mStandardBellDSP;
     std::mutex mLock;
     std::chrono::time_point<std::chrono::system_clock> mSoundStartTime;
     long mSoundDurationMillis{};

@@ -7,6 +7,7 @@ add_library(
         SHARED
         native-lib.cpp
         synth.cpp
+        StandardBell.cpp
         SimpleOboePlayer.cpp
 )
 
