@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import org.mdholloway.listentowikipedia.network.RecentChangesSseService
+import org.mdholloway.listentowikipedia.util.isIpAddress
 import kotlin.math.abs
 import kotlin.math.ln
 
@@ -79,10 +80,11 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
     private fun formatRecentChangeEventForDisplay(event: RecentChangeEvent): String {
         val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
         val bytes = abs(diff)
+        val user = if (isIpAddress(event.user)) "An anonymous user" else event.user
         if (diff >= 0) {
-            return "${event.user} added $bytes bytes to ${event.title}"
+            return "$user added $bytes bytes to ${event.title}"
         } else {
-            return "${event.user} removed $bytes bytes from ${event.title}"
+            return "$user removed $bytes bytes from ${event.title}"
         }
     }
 

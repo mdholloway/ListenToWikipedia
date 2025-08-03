@@ -31,9 +31,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.util.fastCoerceAtLeast
-import androidx.compose.ui.util.fastCoerceAtMost
 import androidx.compose.ui.util.fastCoerceIn
+import org.mdholloway.listentowikipedia.util.isIpAddress
 
 // Data class to hold the information for a circle to be displayed
 data class DisplayCircle(
@@ -45,13 +44,6 @@ data class DisplayCircle(
     val color: Color,
     val createdAt: Long = System.currentTimeMillis()
 )
-
-// Helper function to check if a string is an IP address
-fun isIpAddress(input: String): Boolean {
-    val ipv4Pattern = "^([0-9]{1,3}\\.)+\\d{1,3}$".toRegex()
-    val ipv6Pattern = "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$".toRegex()
-    return input.matches(ipv4Pattern) || input.matches(ipv6Pattern)
-}
 
 @Composable
 fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: List<String>) {
