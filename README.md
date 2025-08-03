@@ -11,7 +11,7 @@ Originally created as a web application by Stephen LaPorte and Mahmoud Hashemi, 
 ## Features
 
 - **Real-time Wikipedia monitoring**: Connects to Wikimedia's Server-Sent Events stream for live edit notifications
-- **Audio synthesis**: Custom Faust-based DSP for generating sounds corresponding to different Wikipedia activities
+- **Audio synthesis**: Custom Faust-based DSP for generating sounds corresponding to Wikipedia edit diff sizes 
 - **Modern Android UI**: Built with Jetpack Compose for a responsive, material design interface
 - **Native audio processing**: Low-latency audio using Google's Oboe library and custom NDK implementation
 
