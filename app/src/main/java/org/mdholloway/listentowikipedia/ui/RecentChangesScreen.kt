@@ -31,6 +31,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.util.fastCoerceAtLeast
+import androidx.compose.ui.util.fastCoerceAtMost
+import androidx.compose.ui.util.fastCoerceIn
 
 // Data class to hold the information for a circle to be displayed
 data class DisplayCircle(
@@ -55,7 +58,7 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: Lis
     val circles = remember { mutableStateListOf<DisplayCircle>() }
 
     // Duration for which a circle stays on screen (in milliseconds)
-    val DISPLAY_DURATION_MILLIS = 10000L
+    val DISPLAY_DURATION_MILLIS = 30000L
 
     // Observe incoming events and add them to the list
     LaunchedEffect(recentChange) {
@@ -63,7 +66,7 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: Lis
             val id = UUID.randomUUID().toString()
 
             val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-            val radius = diff.coerceAtMost(240).dp.value // Scale diff to radius
+            val radius = diff.fastCoerceIn(10, 240).dp.value // Scale diff to radius
 
             val color = when {
                 event.bot -> Color(0xFF8A2BE2) // Purple for bots
@@ -153,7 +156,7 @@ private fun AnimatedCircle(
     
     val animatedAlpha by animateFloatAsState(
         targetValue = targetAlpha.value,
-        animationSpec = tween(durationMillis = displayDurationMillis.toInt(), easing = EaseInOut), label = "alphaAnimation"
+        animationSpec = tween(durationMillis = displayDurationMillis.toInt(), easing = LinearEasing), label = "alphaAnimation"
     )
 
     // Draw Circle
