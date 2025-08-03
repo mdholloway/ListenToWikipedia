@@ -1,5 +1,8 @@
 package org.mdholloway.listentowikipedia.ui.main
 
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -11,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +55,7 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: Lis
     val circles = remember { mutableStateListOf<DisplayCircle>() }
 
     // Duration for which a circle stays on screen (in milliseconds)
-    val DISPLAY_DURATION_MILLIS = 15000L // 15 seconds
+    val DISPLAY_DURATION_MILLIS = 10000L
 
     // Observe incoming events and add them to the list
     LaunchedEffect(recentChange) {
@@ -135,15 +139,21 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: Lis
         }
     }
 }
-
+/
 @Composable
 private fun AnimatedCircle(
     displayCircle: DisplayCircle,
     displayDurationMillis: Long
 ) {
+    val targetAlpha = remember { mutableStateOf(0.55f) }
+    
+    LaunchedEffect(displayCircle.id) {
+        targetAlpha.value = 0f
+    }
+    
     val animatedAlpha by animateFloatAsState(
-        targetValue = if (System.currentTimeMillis() - displayCircle.createdAt < displayDurationMillis) 0.55f else 0f,
-        animationSpec = tween(durationMillis = 1000), label = "alphaAnimation"
+        targetValue = targetAlpha.value,
+        animationSpec = tween(durationMillis = displayDurationMillis.toInt(), easing = EaseInOut), label = "alphaAnimation"
     )
 
     // Draw Circle
