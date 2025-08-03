@@ -139,7 +139,7 @@ fun RecentChangesScreen(recentChange: RecentChangeEvent?, recentChangeTexts: Lis
         }
     }
 }
-/
+
 @Composable
 private fun AnimatedCircle(
     displayCircle: DisplayCircle,
@@ -158,9 +158,19 @@ private fun AnimatedCircle(
 
     // Draw Circle
     Canvas(modifier = Modifier.fillMaxSize()) {
+        // Ensure circle stays within bounds by accounting for radius
+        val centerX = (displayCircle.radius + (size.width - 2 * displayCircle.radius) * displayCircle.x).coerceIn(
+            displayCircle.radius, 
+            size.width - displayCircle.radius
+        )
+        val centerY = (displayCircle.radius + (size.height - 2 * displayCircle.radius) * displayCircle.y).coerceIn(
+            displayCircle.radius, 
+            size.height - displayCircle.radius
+        )
+        
         drawCircle(
             color = displayCircle.color,
-            center = Offset(size.width * displayCircle.x, size.height * displayCircle.y),
+            center = Offset(centerX, centerY),
             radius = displayCircle.radius,
             alpha = animatedAlpha
         )
