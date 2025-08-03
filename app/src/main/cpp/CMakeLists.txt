@@ -8,7 +8,7 @@ add_library(
         native-lib.cpp
         synth.cpp
         StandardBell.cpp
-        SimpleOboePlayer.cpp
+        OboeAudioPlayer.cpp
 )
 
 find_library(log-lib log)

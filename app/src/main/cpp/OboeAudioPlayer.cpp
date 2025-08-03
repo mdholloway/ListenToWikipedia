@@ -1,28 +1,27 @@
-#include "SimpleOboePlayer.h"
+#include "OboeAudioPlayer.h"
 #include <android/log.h>
 #include <cmath>
 #include <algorithm>
 
-#define TAG "SimpleOboePlayer"
+#define TAG "OboeAudioPlayer"
 
 
-SimpleOboePlayer::SimpleOboePlayer() :
+OboeAudioPlayer::OboeAudioPlayer() :
     oboeaudio(48000), // TODO: Don't hardcode the sample rate
-    mSoundDurationMillis(150),
     mAudioController(new APIUI()),
     mStandardBellDSP(new mydsp()) {
 
-    this->init("simpleOboePlayer", mStandardBellDSP);
+    this->init(TAG, mStandardBellDSP);
     mStandardBellDSP->buildUserInterface(mAudioController);
 
     mAudioController->setParamValue("/standardBell/gain", 0.4f); // Ensure a reasonable gain
 }
 
-SimpleOboePlayer::~SimpleOboePlayer() {
+OboeAudioPlayer::~OboeAudioPlayer() {
     delete mAudioController;
 }
 
-void SimpleOboePlayer::playEventSound(int diff, bool isBot, bool isIpAddress) {
+void OboeAudioPlayer::playEventSound(int diff, bool isBot, bool isIpAddress) {
     std::lock_guard<std::mutex> lock(mLock);
 
     // TODO: Randomize?
@@ -33,6 +32,6 @@ void SimpleOboePlayer::playEventSound(int diff, bool isBot, bool isIpAddress) {
     mAudioController->setParamValue("/standardBell/hammerSize", 0.3f);
 
     mAudioController->setParamValue("/standardBell/gate", 1.0f);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
     mAudioController->setParamValue("/standardBell/gate", 0.0f);
 }

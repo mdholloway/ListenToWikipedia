@@ -1,17 +1,16 @@
-#ifndef OBOE_SIMPLEOBOEPLAYER_H
-#define OBOE_SIMPLEOBOEPLAYER_H
+#ifndef OBOE_AUDIO_PLAYER_H
+#define OBOE_AUDIO_PLAYER_H
 
 #include "faust/audio/oboe-dsp.h"
 #include "faust/gui/APIUI.h"
-#include <oboe/Oboe.h>
 #include <mutex>
 #include <chrono>
 #include "StandardBell.cpp"
 
-class SimpleOboePlayer : public oboeaudio {
+class OboeAudioPlayer : public oboeaudio {
 public:
-    SimpleOboePlayer();
-    ~SimpleOboePlayer();
+    OboeAudioPlayer();
+    ~OboeAudioPlayer();
 
     void playEventSound(int diff, bool isBot, bool isIpAddress);
 
@@ -20,7 +19,6 @@ private:
     mydsp* mStandardBellDSP;
     std::mutex mLock;
     std::chrono::time_point<std::chrono::system_clock> mSoundStartTime;
-    long mSoundDurationMillis{};
-}; 
+};
 
-#endif //OBOE_SIMPLEOBOEPLAYER_H
+#endif //OBOE_AUDIO_PLAYER_H
