@@ -24,8 +24,7 @@ OboeAudioPlayer::~OboeAudioPlayer() {
 void OboeAudioPlayer::playEventSound(int diff, bool isBot, bool isIpAddress) {
     std::lock_guard<std::mutex> lock(mLock);
 
-    // TODO: Randomize?
-    mAudioController->setParamValue("/standardBell/exPos", 0.0f);
+    mAudioController->setParamValue("/standardBell/exPos", std::rand() % 7);
 
     // TODO: Vary with diff size
     mAudioController->setParamValue("/standardBell/hammerHardness", 0.9f);
