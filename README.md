@@ -1,6 +1,6 @@
 # Listen To Wikipedia - Android
 
-A native Android adaptation of the original [Listen To Wikipedia](http://listen.hatnote.com) web application, which provides real-time audio visualization of Wikipedia edits as they happen around the world.
+A native Android adaptation of the original [Listen To Wikipedia](http://listen.hatnote.com) web application, which provides real-time audio-visual representations of Wikipedia edits as they happen around the world.
 
 ## About
 
