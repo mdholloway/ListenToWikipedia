@@ -58,22 +58,25 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
         dsp.setParamValue("/Polyphonic/Voices/marimba/sharpness", 0.5f) */
 
         // --- TEMPORARY TEST: Play a fixed tone to confirm audio output ---
-        viewModelScope.launch {
-            Log.d(TAG, "Attempting to play a test tone for 1 second")
+        //viewModelScope.launch {
+            //Log.d(TAG, "Attempting to play a test tone for 1 second")
             //val testVoiceAddress = dsp.newVoice()
             //if (testVoiceAddress != 0L) {
                 //dsp.setVoiceParamValue("/marimba/freq", testVoiceAddress, 440.0f) // A4 note
                 //dsp.setVoiceParamValue("/marimba/gain", testVoiceAddress, 0.8f) // High gain for testing
-                dsp.setParamValue("/synth/gate", 1.0f) // Gate ON
-                Log.d(TAG, "Test tone triggered")
-                delay(1000) // Play for 1 second
-                dsp.setParamValue("/synth/gate", 0.0f) // Gate OFF
+                //dsp.setParamValue("/synth/gate", 1.0f) // Gate ON
+                //dsp.keyOn(69, 100)
+                //Log.d(TAG, "Test tone triggered")
+                //delay(1000) // Play for 1 second
+                //dsp.setParamValue("/synth/gate", 0.0f) // Gate OFF
+                //dsp.keyOff(69)
+                //Log.d(TAG, "Test tone released")
                 //dsp.deleteVoice(testVoiceAddress) // Delete the voice
-                Log.d(TAG, "Test tone finished")
+                // Log.d(TAG, "Test tone finished")
             //} else {
             //    Log.e(TAG, "Failed to allocate test voice.")
             //}
-        }
+        //}
         // --- END TEMPORARY TEST ---
 
         recentChangesJob = sseService.listenToRecentChanges()
@@ -82,13 +85,14 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
                     _latestRecentChangeEvent.postValue(event)
                     addEventToTextList(event)
 
-                    // Calculate frequency based on byte difference
-                    //val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-                    //val freq = calculateFrequencyFromBytes(diff) // Implement this function below
+                    // Calculate MIDI note based on byte difference
+                    val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
+                    val midiNote = calculateMidiNoteFromBytes(diff)
 
-                   // val voiceAddress = dsp.newVoice()
-                    //if (voiceAddress != 0L) { // Check if a voice was successfully allocated
-                        //Log.d(TAG, "New Faust voice allocated: $voiceAddress for event: ${event.title}")
+                    Log.d(TAG, "Playing MIDI note $midiNote for ${abs(diff)} byte difference in ${event.title}")
+                    val voiceAddress = dsp.keyOn(midiNote, 100)
+                    if (voiceAddress != 0L) { // Check if a voice was successfully allocated
+                        Log.d(TAG, "New Faust voice allocated: $voiceAddress for event: ${event.title}")
 
                         // 5. Set parameters for the *individual voice*
                         //dsp.setVoiceParamValue("/marimba/freq", voiceAddress, freq)
@@ -111,9 +115,9 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
                             // dsp.deleteVoice(voiceAddress)
                             // Log.d(TAG, "Deleted voice: $voiceAddress")}
                         //}
-                    //} else {
-                        //Log.e(TAG, "Failed to allocate new Faust voice. Is the DSP compiled with -nvoices and not out of voices?")
-                    //}
+                    } else {
+                        Log.e(TAG, "Failed to allocate new Faust voice. Is the DSP compiled with -nvoices and not out of voices?")
+                    }
                 }
             }
             .catch { e ->
@@ -143,27 +147,28 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
     }
 
 
-    // Helper function to map byte differences to a musical frequency
-    private fun calculateFrequencyFromBytes(byteDiff: Int): Float {
-        val absDiff = abs(byteDiff).toFloat()
+    // Helper function to map byte differences to a MIDI note number
+    private fun calculateMidiNoteFromBytes(byteDiff: Int): Int {
+        val absDiff = abs(byteDiff)
 
-        // Define your desired frequency range and byte difference range
-        val minBytes = 1f // Smallest diff you want to map
-        val maxBytes = 50000f // Largest diff you expect (cap to avoid extreme pitches)
-        val minFreq = 100f // C2, a low but audible frequency
-        val maxFreq = 2000f // C7, a high and clear frequency
+        // Define your desired byte difference range and MIDI note range
+        val minBytes = 1 // Smallest diff you want to map
+        val maxBytes = 50000 // Largest diff you expect
+        val minMidiNote = 36 // C2 (low but audible)
+        val maxMidiNote = 96 // C7 (high and clear)
 
         // Clamp the byteDiff to stay within a reasonable range for mapping
         val clampedDiff = absDiff.coerceIn(minBytes, maxBytes)
 
         // Use logarithmic scaling for pitch perception
         // Map clampedDiff (log scale) to normalized 0-1 range
-        val normalizedValue = (ln(clampedDiff) - ln(minBytes)) / (ln(maxBytes) - ln(minBytes))
+        val normalizedValue = (ln(clampedDiff.toFloat()) - ln(minBytes.toFloat())) / 
+                             (ln(maxBytes.toFloat()) - ln(minBytes.toFloat()))
 
-        // Map normalized 0-1 range to desired frequency range (log scale)
-        val logFreq = ln(minFreq) + normalizedValue * (ln(maxFreq) - ln(minFreq))
+        // Map normalized 0-1 range to MIDI note range
+        val midiNote = minMidiNote + (normalizedValue * (maxMidiNote - minMidiNote)).toInt()
 
-        return exp(logFreq) // Convert back from log frequency to linear frequency
+        return midiNote.coerceIn(0, 127) // Ensure valid MIDI range
     }
 
     fun stopListeningToRecentChanges() {
