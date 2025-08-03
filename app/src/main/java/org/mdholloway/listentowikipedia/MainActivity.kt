@@ -2,7 +2,6 @@ package org.mdholloway.listentowikipedia
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -16,7 +15,6 @@ import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
 
 class MainActivity : ComponentActivity() {
 
-    lateinit var attributionContext: Context
 
     private val recentChangesViewModel: RecentChangesViewModel by viewModels()
 
@@ -36,11 +34,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        attributionContext = createAttributionContext("main")
-
         // 2. Check and request permission on activity creation
         when {
-            ContextCompat.checkSelfPermission(attributionContext, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> {
                 // Permission already granted, start immediately
                 Log.i("MainActivity", "RECORD_AUDIO permission already granted. Starting audio service.")
                 recentChangesViewModel.startListeningToRecentChanges()

@@ -83,23 +83,21 @@ In case you would like to use the the built-in accelerometer or gyroscope of you
 ### Main Parameters
 
 * **0**: `/Polyphonic/Voices/Panic`
-* **1**: `/Polyphonic/Voices/marimba/midi/freq`
-* **2**: `/Polyphonic/Voices/marimba/midi/gain`
-* **3**: `/Polyphonic/Voices/marimba/otherParams/strikePosition`
-* **4**: `/Polyphonic/Voices/marimba/otherParams/strikeCutOff`
-* **5**: `/Polyphonic/Voices/marimba/otherParams/outGain`
-* **6**: `/Polyphonic/Voices/marimba/otherParams/strikeSharpness`
-* **7**: `/Polyphonic/Voices/marimba/gate`
+* **1**: `/Polyphonic/Voices/djembe/midi/freq`
+* **2**: `/Polyphonic/Voices/djembe/midi/gain`
+* **3**: `/Polyphonic/Voices/djembe/otherParams/strikePosition`
+* **4**: `/Polyphonic/Voices/djembe/otherParams/strikeSharpness`
+* **5**: `/Polyphonic/Voices/djembe/otherParams/outGain`
+* **6**: `/Polyphonic/Voices/djembe/gate`
 
 ### Independent Voice
 
-* **0**: `/marimba/gate`
-* **1**: `/marimba/midi/freq`
-* **2**: `/marimba/midi/gain`
-* **3**: `/marimba/otherParams/outGain`
-* **4**: `/marimba/otherParams/strikeCutOff`
-* **5**: `/marimba/otherParams/strikePosition`
-* **6**: `/marimba/otherParams/strikeSharpness`
+* **0**: `/djembe/gate`
+* **1**: `/djembe/midi/freq`
+* **2**: `/djembe/midi/gain`
+* **3**: `/djembe/otherParams/outGain`
+* **4**: `/djembe/otherParams/strikePosition`
+* **5**: `/djembe/otherParams/strikeSharpness`
 
 ## API Reference
 
