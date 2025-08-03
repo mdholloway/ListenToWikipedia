@@ -4,7 +4,7 @@ A native Android adaptation of the original [Listen To Wikipedia](http://listen.
 
 ## About
 
-This project brings the mesmerizing experience of "listening" to Wikipedia edits to Android devices. Each edit, new page creation, and user registration on Wikipedia generates a unique sound, creating an ambient soundscape that reflects the pulse of global knowledge creation.
+This project brings the mesmerizing experience of "listening" to Wikipedia edits to Android devices. Each edit generates a unique sound, creating an ambient soundscape that reflects the pulse of knowledge creation.
 
 Originally created as a web application by Stephen LaPorte and Mahmoud Hashemi, this Android version was built to explore contemporary Android development practices and dive deep into native audio programming with the Android NDK.
 
@@ -59,13 +59,6 @@ Originally created as a web application by Stephen LaPorte and Mahmoud Hashemi, 
 - **Faust integration**: Complete example of embedding Faust DSP in Android
 - **Polyphonic synthesis**: Multi-voice audio generation with parameter control
 - **Mobile audio constraints**: Handling Android's audio latency and buffer management
-
-## Getting Started
-
-1. Clone the repository
-2. Open in Android Studio
-3. Ensure NDK is installed and configured
-4. Build and run
 
 ## Permissions
 
