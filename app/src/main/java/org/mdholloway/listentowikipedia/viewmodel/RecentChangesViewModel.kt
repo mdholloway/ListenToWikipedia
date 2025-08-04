@@ -17,8 +17,9 @@ import org.mdholloway.listentowikipedia.util.isIpAddress
 import kotlin.math.abs
 import kotlin.math.ln
 
-class RecentChangesViewModel(application: Application) : AndroidViewModel(application) {
-
+class RecentChangesViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     companion object {
         private const val TAG = "RecentChangesViewModel"
         private const val MAX_DISPLAY_MESSAGES = 3
@@ -49,22 +50,22 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
         }
         Log.i(TAG, "DspFaust audio engine started successfully.")
 
-        recentChangesJob = sseService.listenToRecentChanges()
-            .onEach { event ->
-                if (event.wiki == "enwiki" && event.namespace == 0 && event.type == "edit") {
-                    // Calculate MIDI note based on byte difference
-                    val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-                    val midiNote = calculateMidiNoteFromBytes(diff)
-                    dsp.keyOn(midiNote, 100)
+        recentChangesJob =
+            sseService
+                .listenToRecentChanges()
+                .onEach { event ->
+                    if (event.wiki == "enwiki" && event.namespace == 0 && event.type == "edit") {
+                        // Calculate MIDI note based on byte difference
+                        val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
+                        val midiNote = calculateMidiNoteFromBytes(diff)
+                        dsp.keyOn(midiNote, 100)
 
-                    _latestRecentChangeEvent.postValue(event)
-                    addEventToTextList(event)
-                }
-            }
-            .catch { e ->
-                Log.e(TAG, "Error collecting recent changes", e)
-            }
-            .launchIn(viewModelScope)
+                        _latestRecentChangeEvent.postValue(event)
+                        addEventToTextList(event)
+                    }
+                }.catch { e ->
+                    Log.e(TAG, "Error collecting recent changes", e)
+                }.launchIn(viewModelScope)
     }
 
     private fun addEventToTextList(event: RecentChangeEvent) {
@@ -88,7 +89,6 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-
     // Helper function to map byte differences to a MIDI note number
     private fun calculateMidiNoteFromBytes(byteDiff: Int): Int {
         val absDiff = abs(byteDiff)
@@ -104,8 +104,9 @@ class RecentChangesViewModel(application: Application) : AndroidViewModel(applic
 
         // Use logarithmic scaling for pitch perception
         // Map clampedDiff (log scale) to normalized 0-1 range
-        val normalizedValue = (ln(clampedDiff.toFloat()) - ln(minBytes.toFloat())) / 
-                             (ln(maxBytes.toFloat()) - ln(minBytes.toFloat()))
+        val normalizedValue =
+            (ln(clampedDiff.toFloat()) - ln(minBytes.toFloat())) /
+                (ln(maxBytes.toFloat()) - ln(minBytes.toFloat()))
 
         // Map normalized 0-1 range to MIDI note range (inverted: larger edits = lower notes)
         val midiNote = maxMidiNote - (normalizedValue * (maxMidiNote - minMidiNote)).toInt()

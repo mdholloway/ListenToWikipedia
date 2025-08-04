@@ -8,6 +8,8 @@ junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 appcompat = "1.6.1"
+ktlintCliReporterPlain = "1.7.1"
+ktlintComposeRules = "0.4.26"
 ktorVersion = "3.2.2"
 material = "1.10.0"
 oboe = "1.9.3"
@@ -32,6 +34,8 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+ktlint-cli-reporter-plain = { module = "com.pinterest.ktlint:ktlint-cli-reporter-plain", version.ref = "ktlintCliReporterPlain" }
+ktlint-compose-rules = { module = "io.nlopez.compose.rules:ktlint-compose-rules", version.ref = "ktlintComposeRules" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorVersion" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorVersion" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }

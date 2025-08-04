@@ -14,31 +14,30 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import org.mdholloway.listentowikipedia.ui.main.RecentChangesScreen
+import org.mdholloway.listentowikipedia.ui.RecentChangesScreen
 import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
 
 class MainActivity : ComponentActivity() {
-
-
     private val recentChangesViewModel: RecentChangesViewModel by viewModels()
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            Log.i("MainActivity", "RECORD_AUDIO permission granted. Starting audio service.")
-            // Permission granted, now it's safe to start listening
-            recentChangesViewModel.startListeningToRecentChanges()
-        } else {
-            Log.w("MainActivity", "RECORD_AUDIO permission denied. Audio features may not work.")
-            // Permission denied. You might want to show a message to the user.
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.i("MainActivity", "RECORD_AUDIO permission granted. Starting audio service.")
+                // Permission granted, now it's safe to start listening
+                recentChangesViewModel.startListeningToRecentChanges()
+            } else {
+                Log.w("MainActivity", "RECORD_AUDIO permission denied. Audio features may not work.")
+                // Permission denied. You might want to show a message to the user.
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         // Hide navigation bar
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController.apply {
@@ -73,7 +72,7 @@ class MainActivity : ComponentActivity() {
                 recentChangesViewModel.recentChangeTextList.observeAsState(initial = emptyList()).value
             RecentChangesScreen(
                 recentChange = latestRecentChangeEvent,
-                recentChangeTexts = recentChangeTextList
+                recentChangeTexts = recentChangeTextList,
             )
         }
     }

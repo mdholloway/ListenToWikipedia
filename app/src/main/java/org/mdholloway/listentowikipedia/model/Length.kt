@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Length(
     val old: Int? = null,
-    val new: Int
+    val new: Int,
 )

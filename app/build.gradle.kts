@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "2.2.0"
+    id("com.diffplug.spotless") version "7.2.1"
 }
 
 android {
@@ -38,9 +39,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         viewBinding = true
         compose = true
@@ -54,6 +52,17 @@ android {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
         }
+    }
+}
+
+spotless {
+    kotlin {
+        target("**/*.kt")
+        ktlint("1.7.1").setEditorConfigPath(
+            "${rootDir}/.editorconfig"
+        )
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }
 
