@@ -62,7 +62,7 @@ Originally created as a web application by Stephen LaPorte and Mahmoud Hashemi, 
 
 ## Permissions
 
-The app requests `RECORD_AUDIO` permission, which is required by the audio system even though the app only produces sound (Android audio library requirement).
+The app requests `RECORD_AUDIO` permission, which is required by the audio system even though the app only produces sound.
 
 ## Future Enhancements
 
