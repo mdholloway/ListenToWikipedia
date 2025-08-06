@@ -43,7 +43,6 @@ data class DisplayCircle(
     val createdAt: Long = System.currentTimeMillis(),
 )
 
-@Suppress("ktlint:standard:property-naming")
 @Composable
 fun RecentChangesScreen(
     recentChange: RecentChangeEvent?,
@@ -52,7 +51,7 @@ fun RecentChangesScreen(
     val circles = remember { mutableStateListOf<DisplayCircle>() }
 
     // Duration for which a circle stays on screen (in milliseconds)
-    val DISPLAY_DURATION_MILLIS = 30000L
+    val displayDurationMillis = 30000L
 
     // Observe incoming events and add them to the list
     LaunchedEffect(recentChange) {
@@ -90,7 +89,7 @@ fun RecentChangesScreen(
     LaunchedEffect(Unit) {
         while (true) {
             val currentTime = System.currentTimeMillis()
-            circles.removeAll { currentTime - it.createdAt > DISPLAY_DURATION_MILLIS }
+            circles.removeAll { currentTime - it.createdAt > displayDurationMillis }
             delay(1000) // Check every second
         }
     }
@@ -102,7 +101,7 @@ fun RecentChangesScreen(
                 .background(Color(0xFF0D1B2A)), // Dark blue background
     ) {
         circles.forEach { displayCircle ->
-            AnimatedCircle(displayCircle, DISPLAY_DURATION_MILLIS)
+            AnimatedCircle(displayCircle, displayDurationMillis)
         }
 
         // Text overlay at the bottom
