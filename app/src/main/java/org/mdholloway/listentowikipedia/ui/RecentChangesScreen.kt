@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -25,83 +24,21 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastCoerceIn
-import kotlinx.coroutines.delay
-import org.mdholloway.listentowikipedia.model.RecentChangeEvent
-import org.mdholloway.listentowikipedia.util.isIpAddress
-import java.util.UUID
-import kotlin.random.Random
-
-// Data class to hold the information for a circle to be displayed
-data class DisplayCircle(
-    val id: String,
-    val event: RecentChangeEvent,
-    val x: Float,
-    val y: Float,
-    val radius: Float,
-    val color: Color,
-    val createdAt: Long = System.currentTimeMillis(),
-)
+import org.mdholloway.listentowikipedia.ui.state.DisplayCircle
 
 @Composable
 fun RecentChangesScreen(
-    recentChange: RecentChangeEvent?,
+    displayCircles: List<DisplayCircle>,
     recentChangeTexts: List<String>,
 ) {
-    val circles = remember { mutableStateListOf<DisplayCircle>() }
-
-    // Duration for which a circle stays on screen (in milliseconds)
-    val displayDurationMillis = 30000L
-
-    // Observe incoming events and add them to the list
-    LaunchedEffect(recentChange) {
-        recentChange?.let { event ->
-            val id = UUID.randomUUID().toString()
-
-            val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-            val radius = diff.fastCoerceIn(10, 240).dp.value // Scale diff to radius
-
-            val color =
-                when {
-                    event.bot -> Color(0xFF8A2BE2) // Purple for bots
-                    isIpAddress(event.user) -> Color(0xFF00FF00) // Green for unregistered users (IPs)
-                    else -> Color(0xFF808080) // Gray for registered users
-                }
-
-            // Generate random position within screen bounds (relative to size)
-            val randomX = Random.nextFloat()
-            val randomY = Random.nextFloat()
-
-            circles.add(
-                DisplayCircle(
-                    id = id,
-                    event = event,
-                    x = randomX,
-                    y = randomY,
-                    radius = radius,
-                    color = color,
-                ),
-            )
-        }
-    }
-
-    // Periodically clean up old circles
-    LaunchedEffect(Unit) {
-        while (true) {
-            val currentTime = System.currentTimeMillis()
-            circles.removeAll { currentTime - it.createdAt > displayDurationMillis }
-            delay(1000) // Check every second
-        }
-    }
-
     Box(
         modifier =
             Modifier
                 .fillMaxSize()
                 .background(Color(0xFF0D1B2A)), // Dark blue background
     ) {
-        circles.forEach { displayCircle ->
-            AnimatedCircle(displayCircle, displayDurationMillis)
+        displayCircles.forEach { displayCircle ->
+            AnimatedCircle(displayCircle)
         }
 
         // Text overlay at the bottom
@@ -143,10 +80,8 @@ fun RecentChangesScreen(
 }
 
 @Composable
-private fun AnimatedCircle(
-    displayCircle: DisplayCircle,
-    displayDurationMillis: Long,
-) {
+private fun AnimatedCircle(displayCircle: DisplayCircle) {
+    val displayDurationMillis = 30000L
     val targetAlpha = remember { mutableStateOf(0.55f) }
 
     LaunchedEffect(displayCircle.id) {

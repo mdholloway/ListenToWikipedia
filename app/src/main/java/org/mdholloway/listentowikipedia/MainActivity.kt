@@ -74,11 +74,10 @@ class MainActivity : ComponentActivity() {
         checkAndRequestPermission()
 
         setContent {
-            val latestRecentChangeEvent by recentChangesViewModel.latestRecentChangeEvent.collectAsState()
-            val recentChangeTextList by recentChangesViewModel.recentChangeTextList.collectAsState()
+            val uiState by recentChangesViewModel.uiState.collectAsState()
             RecentChangesScreen(
-                recentChange = latestRecentChangeEvent,
-                recentChangeTexts = recentChangeTextList,
+                displayCircles = uiState.displayCircles,
+                recentChangeTexts = uiState.recentChangeTexts,
             )
         }
     }

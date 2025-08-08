@@ -1,23 +1,31 @@
 package org.mdholloway.listentowikipedia.viewmodel
 
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.mdholloway.listentowikipedia.audio.AudioManager
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import org.mdholloway.listentowikipedia.repository.RecentChangesRepository
+import org.mdholloway.listentowikipedia.ui.state.CircleColors
+import org.mdholloway.listentowikipedia.ui.state.DisplayCircle
+import org.mdholloway.listentowikipedia.ui.state.RecentChangesUiState
 import org.mdholloway.listentowikipedia.util.isIpAddress
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.ln
+import kotlin.random.Random
 
 @HiltViewModel
 class RecentChangesViewModel
@@ -28,16 +36,75 @@ class RecentChangesViewModel
         companion object {
             private const val TAG = "RecentChangesViewModel"
             private const val MAX_DISPLAY_MESSAGES = 3
+            private const val CIRCLE_DISPLAY_DURATION_MS = 30000L
+            private const val CLEANUP_INTERVAL_MS = 1000L
         }
 
-        private val _latestRecentChangeEvent = MutableStateFlow<RecentChangeEvent?>(null)
-        val latestRecentChangeEvent: StateFlow<RecentChangeEvent?> = _latestRecentChangeEvent.asStateFlow()
-
-        private val _recentChangeTextList = MutableStateFlow<List<String>>(emptyList())
-        val recentChangeTextList: StateFlow<List<String>> = _recentChangeTextList.asStateFlow()
+        // Single source of truth for UI state
+        private val _uiState = MutableStateFlow(RecentChangesUiState())
+        val uiState: StateFlow<RecentChangesUiState> = _uiState.asStateFlow()
 
         private var recentChangesJob: Job? = null
+        private var circleCleanupJob: Job? = null
         private var audioManager: AudioManager? = null
+
+        init {
+            startCircleCleanup()
+        }
+
+        private fun startCircleCleanup() {
+            circleCleanupJob =
+                viewModelScope.launch {
+                    while (true) {
+                        delay(CLEANUP_INTERVAL_MS)
+                        cleanupOldCircles()
+                    }
+                }
+        }
+
+        private fun cleanupOldCircles() {
+            val currentTime = System.currentTimeMillis()
+            val currentState = _uiState.value
+            val filteredCircles =
+                currentState.displayCircles.filter {
+                    currentTime - it.createdAt <= CIRCLE_DISPLAY_DURATION_MS
+                }
+
+            if (filteredCircles.size != currentState.displayCircles.size) {
+                _uiState.value = currentState.copy(displayCircles = filteredCircles)
+            }
+        }
+
+        private fun addCircleForEvent(event: RecentChangeEvent) {
+            val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
+            val radius = abs(diff).coerceIn(10, 240).toFloat()
+
+            val color =
+                when {
+                    event.bot -> CircleColors.Bot
+                    isIpAddress(event.user) -> CircleColors.Anonymous
+                    else -> CircleColors.Registered
+                }
+
+            val randomX = Random.nextFloat()
+            val randomY = Random.nextFloat()
+
+            val newCircle =
+                DisplayCircle(
+                    id = UUID.randomUUID().toString(),
+                    event = event,
+                    x = randomX,
+                    y = randomY,
+                    radius = radius,
+                    color = color,
+                )
+
+            val currentState = _uiState.value
+            _uiState.value =
+                currentState.copy(
+                    displayCircles = currentState.displayCircles + newCircle,
+                )
+        }
 
         fun setAudioManager(audioManager: AudioManager) {
             this.audioManager = audioManager
@@ -61,7 +128,7 @@ class RecentChangesViewModel
                             val midiNote = calculateMidiNoteFromBytes(diff)
                             audioManager?.playNote(midiNote, 100)
 
-                            _latestRecentChangeEvent.value = event
+                            addCircleForEvent(event)
                             addEventToTextList(event)
                         }
                     }.catch { e ->
@@ -70,13 +137,16 @@ class RecentChangesViewModel
         }
 
         private fun addEventToTextList(event: RecentChangeEvent) {
-            val currentList = _recentChangeTextList.value.toMutableList()
             val formattedMessage = formatRecentChangeEventForDisplay(event)
+            val currentState = _uiState.value
+            val currentList = currentState.recentChangeTexts.toMutableList()
+
             currentList.add(0, formattedMessage) // Add to the beginning
             if (currentList.size > MAX_DISPLAY_MESSAGES) {
                 currentList.removeAt(currentList.size - 1) // Remove the oldest if over limit
             }
-            _recentChangeTextList.value = currentList
+
+            _uiState.value = currentState.copy(recentChangeTexts = currentList)
         }
 
         private fun formatRecentChangeEventForDisplay(event: RecentChangeEvent): String {
@@ -125,5 +195,6 @@ class RecentChangesViewModel
             super.onCleared()
             Log.i(TAG, "ViewModel onCleared.")
             stopListeningToRecentChanges()
+            circleCleanupJob?.cancel()
         }
     }
