@@ -3,7 +3,6 @@ package org.mdholloway.listentowikipedia.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.DspFaust.DspFaust
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.mdholloway.listentowikipedia.audio.AudioManager
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import org.mdholloway.listentowikipedia.repository.RecentChangesRepository
 import org.mdholloway.listentowikipedia.util.isIpAddress
@@ -37,7 +37,11 @@ class RecentChangesViewModel
         val recentChangeTextList: StateFlow<List<String>> = _recentChangeTextList.asStateFlow()
 
         private var recentChangesJob: Job? = null
-        private val dsp = DspFaust()
+        private var audioManager: AudioManager? = null
+
+        fun setAudioManager(audioManager: AudioManager) {
+            this.audioManager = audioManager
+        }
 
         fun startListeningToRecentChanges() {
             if (recentChangesJob?.isActive == true) {
@@ -45,14 +49,7 @@ class RecentChangesViewModel
                 return
             }
 
-            // Attempt to start the DspFaust audio engine
-            val started = dsp.start()
-            if (!started) {
-                Log.e(TAG, "DspFaust failed to start audio engine! Check RECORD_AUDIO permission and device state.")
-                // Do not proceed if the audio engine couldn't start
-                return
-            }
-            Log.i(TAG, "DspFaust audio engine started successfully.")
+            Log.i(TAG, "Starting to listen to recent changes")
 
             recentChangesJob =
                 repository
@@ -62,7 +59,7 @@ class RecentChangesViewModel
                             // Calculate MIDI note based on byte difference
                             val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
                             val midiNote = calculateMidiNoteFromBytes(diff)
-                            dsp.keyOn(midiNote, 100)
+                            audioManager?.playNote(midiNote, 100)
 
                             _latestRecentChangeEvent.value = event
                             addEventToTextList(event)
@@ -126,9 +123,8 @@ class RecentChangesViewModel
 
         override fun onCleared() {
             super.onCleared()
-            Log.i(TAG, "ViewModel onCleared. Ensuring audio engine and SSE service are stopped.")
+            Log.i(TAG, "ViewModel onCleared. Stopping SSE service.")
             stopListeningToRecentChanges()
-            dsp.stop()
             repository.close()
         }
     }

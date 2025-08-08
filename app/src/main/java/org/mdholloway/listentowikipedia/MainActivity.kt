@@ -16,21 +16,25 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import dagger.hilt.android.AndroidEntryPoint
+import org.mdholloway.listentowikipedia.audio.AudioManager
 import org.mdholloway.listentowikipedia.ui.RecentChangesScreen
 import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val recentChangesViewModel: RecentChangesViewModel by viewModels()
+
+    @Inject
+    lateinit var audioManager: AudioManager
 
     private val requestPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission(),
         ) { isGranted: Boolean ->
             if (isGranted) {
-                Log.i("MainActivity", "RECORD_AUDIO permission granted. Starting audio service.")
-                // Permission granted, now it's safe to start listening
-                recentChangesViewModel.startListeningToRecentChanges()
+                Log.i("MainActivity", "RECORD_AUDIO permission granted.")
+                startAudioAndListening()
             } else {
                 Log.w("MainActivity", "RECORD_AUDIO permission denied. Audio features may not work.")
                 // Permission denied. You might want to show a message to the user.
@@ -48,25 +52,11 @@ class MainActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
-        // 2. Check and request permission on activity creation
-        when {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission already granted, start immediately
-                Log.i("MainActivity", "RECORD_AUDIO permission already granted. Starting audio service.")
-                recentChangesViewModel.startListeningToRecentChanges()
-            }
-            shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) -> {
-                // Explain to the user why the permission is needed (optional, good practice)
-                Log.d("MainActivity", "Displaying rationale for RECORD_AUDIO permission.")
-                // You could show a dialog here before launching the request
-                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-            }
-            else -> {
-                // Directly request the permission
-                Log.d("MainActivity", "Requesting RECORD_AUDIO permission for the first time.")
-                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-            }
-        }
+        // Set the AudioManager in the ViewModel
+        recentChangesViewModel.setAudioManager(audioManager)
+
+        // Check and request permission on activity creation
+        checkAndRequestPermission()
 
         setContent {
             val latestRecentChangeEvent by recentChangesViewModel.latestRecentChangeEvent.collectAsState()
@@ -78,8 +68,55 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onResume() {
+        super.onResume()
+        // Start audio and listening when app becomes active
+        if (hasAudioPermission()) {
+            startAudioAndListening()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Stop audio and listening when app goes to background
+        stopAudioAndListening()
+    }
+
+    private fun hasAudioPermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECORD_AUDIO,
+        ) == PackageManager.PERMISSION_GRANTED
+
+    private fun checkAndRequestPermission() {
+        when {
+            hasAudioPermission() -> {
+                Log.i("MainActivity", "RECORD_AUDIO permission already granted.")
+                startAudioAndListening()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) -> {
+                Log.d("MainActivity", "Displaying rationale for RECORD_AUDIO permission.")
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+            else -> {
+                Log.d("MainActivity", "Requesting RECORD_AUDIO permission for the first time.")
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+
+    private fun startAudioAndListening() {
+        Log.i("MainActivity", "Starting audio engine and listening to changes")
+        if (audioManager.start()) {
+            recentChangesViewModel.startListeningToRecentChanges()
+        } else {
+            Log.e("MainActivity", "Failed to start audio engine")
+        }
+    }
+
+    private fun stopAudioAndListening() {
+        Log.i("MainActivity", "Stopping audio engine and listening to changes")
         recentChangesViewModel.stopListeningToRecentChanges()
+        audioManager.stop()
     }
 }
