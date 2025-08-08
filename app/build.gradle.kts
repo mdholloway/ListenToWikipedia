@@ -1,9 +1,11 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "2.2.0"
+    kotlin("plugin.compose") version "2.2.0"
     id("com.diffplug.spotless") version "7.2.1"
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -48,7 +50,7 @@ android {
         prefab = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     externalNativeBuild {
         cmake {
@@ -89,6 +91,8 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.oboe)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

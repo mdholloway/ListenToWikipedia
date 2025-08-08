@@ -14,9 +14,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import dagger.hilt.android.AndroidEntryPoint
 import org.mdholloway.listentowikipedia.ui.RecentChangesScreen
 import org.mdholloway.listentowikipedia.viewmodel.RecentChangesViewModel
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val recentChangesViewModel: RecentChangesViewModel by viewModels()
 
