@@ -1,20 +1,21 @@
 package org.mdholloway.listentowikipedia.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
-import org.mdholloway.listentowikipedia.network.RecentChangesSseService
+import org.mdholloway.listentowikipedia.network.SseManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class RecentChangesRepository
     @Inject
-    constructor(
-        private val sseService: RecentChangesSseService,
-    ) {
-        fun listenToRecentChanges(): Flow<RecentChangeEvent> = sseService.listenToRecentChanges()
+    constructor() {
+        private var sseManager: SseManager? = null
 
-        fun close() {
-            sseService.close()
+        fun setSseManager(sseManager: SseManager) {
+            this.sseManager = sseManager
         }
+
+        fun listenToRecentChanges(): Flow<RecentChangeEvent> = sseManager?.recentChangeEvents ?: emptyFlow()
     }

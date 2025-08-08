@@ -23,7 +23,7 @@ import kotlin.math.ln
 class RecentChangesViewModel
     @Inject
     constructor(
-        private val repository: RecentChangesRepository,
+        val repository: RecentChangesRepository,
     ) : ViewModel() {
         companion object {
             private const val TAG = "RecentChangesViewModel"
@@ -123,8 +123,7 @@ class RecentChangesViewModel
 
         override fun onCleared() {
             super.onCleared()
-            Log.i(TAG, "ViewModel onCleared. Stopping SSE service.")
+            Log.i(TAG, "ViewModel onCleared.")
             stopListeningToRecentChanges()
-            repository.close()
         }
     }
