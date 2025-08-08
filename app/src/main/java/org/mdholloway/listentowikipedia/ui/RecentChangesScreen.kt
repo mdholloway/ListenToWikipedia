@@ -1,8 +1,10 @@
 package org.mdholloway.listentowikipedia.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -24,12 +26,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import org.mdholloway.listentowikipedia.ui.state.DisplayCircle
 
 @Composable
 fun RecentChangesScreen(
     displayCircles: List<DisplayCircle>,
     recentChangeTexts: List<String>,
+    onCircleAnimationFinished: (String) -> Unit = {},
 ) {
     Box(
         modifier =
@@ -38,7 +42,10 @@ fun RecentChangesScreen(
                 .background(Color(0xFF0D1B2A)), // Dark blue background
     ) {
         displayCircles.forEach { displayCircle ->
-            AnimatedCircle(displayCircle)
+            AnimatedCircle(
+                displayCircle = displayCircle,
+                onAnimationFinished = { onCircleAnimationFinished(displayCircle.id) },
+            )
         }
 
         // Text overlay at the bottom
@@ -80,39 +87,48 @@ fun RecentChangesScreen(
 }
 
 @Composable
-private fun AnimatedCircle(displayCircle: DisplayCircle) {
+private fun AnimatedCircle(
+    displayCircle: DisplayCircle,
+    onAnimationFinished: () -> Unit = {},
+) {
     val displayDurationMillis = 30000L
-    val targetAlpha = remember { mutableStateOf(0.55f) }
+    val isVisible = remember { mutableStateOf(true) }
 
     LaunchedEffect(displayCircle.id) {
-        targetAlpha.value = 0f
+        isVisible.value = false
     }
 
-    val animatedAlpha by animateFloatAsState(
-        targetValue = targetAlpha.value,
-        animationSpec = tween(durationMillis = displayDurationMillis.toInt(), easing = LinearEasing),
-        label = "alphaAnimation",
-    )
+    AnimatedVisibility(
+        visible = isVisible.value,
+        enter = fadeIn(animationSpec = tween(durationMillis = 0)),
+        exit = fadeOut(animationSpec = tween(durationMillis = displayDurationMillis.toInt(), easing = LinearEasing)),
+    ) {
+        // Monitor animation completion with a separate LaunchedEffect
+        LaunchedEffect(isVisible.value) {
+            if (!isVisible.value) {
+                // Wait for the animation duration, then notify
+                delay(displayDurationMillis.toLong())
+                onAnimationFinished()
+            }
+        }
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            // Ensure circle stays within bounds by accounting for radius
+            val centerX =
+                (displayCircle.radius + (size.width - 2 * displayCircle.radius) * displayCircle.x).coerceIn(
+                    displayCircle.radius,
+                    size.width - displayCircle.radius,
+                )
+            val centerY =
+                (displayCircle.radius + (size.height - 2 * displayCircle.radius) * displayCircle.y).coerceIn(
+                    displayCircle.radius,
+                    size.height - displayCircle.radius,
+                )
 
-    // Draw Circle
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        // Ensure circle stays within bounds by accounting for radius
-        val centerX =
-            (displayCircle.radius + (size.width - 2 * displayCircle.radius) * displayCircle.x).coerceIn(
-                displayCircle.radius,
-                size.width - displayCircle.radius,
+            drawCircle(
+                color = displayCircle.color,
+                center = Offset(centerX, centerY),
+                radius = displayCircle.radius,
             )
-        val centerY =
-            (displayCircle.radius + (size.height - 2 * displayCircle.radius) * displayCircle.y).coerceIn(
-                displayCircle.radius,
-                size.height - displayCircle.radius,
-            )
-
-        drawCircle(
-            color = displayCircle.color,
-            center = Offset(centerX, centerY),
-            radius = displayCircle.radius,
-            alpha = animatedAlpha,
-        )
+        }
     }
 }

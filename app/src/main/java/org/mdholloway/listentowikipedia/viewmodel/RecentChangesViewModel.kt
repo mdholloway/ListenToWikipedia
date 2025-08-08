@@ -36,8 +36,6 @@ class RecentChangesViewModel
         companion object {
             private const val TAG = "RecentChangesViewModel"
             private const val MAX_DISPLAY_MESSAGES = 3
-            private const val CIRCLE_DISPLAY_DURATION_MS = 30000L
-            private const val CLEANUP_INTERVAL_MS = 1000L
         }
 
         // Single source of truth for UI state
@@ -45,34 +43,12 @@ class RecentChangesViewModel
         val uiState: StateFlow<RecentChangesUiState> = _uiState.asStateFlow()
 
         private var recentChangesJob: Job? = null
-        private var circleCleanupJob: Job? = null
         private var audioManager: AudioManager? = null
 
-        init {
-            startCircleCleanup()
-        }
-
-        private fun startCircleCleanup() {
-            circleCleanupJob =
-                viewModelScope.launch {
-                    while (true) {
-                        delay(CLEANUP_INTERVAL_MS)
-                        cleanupOldCircles()
-                    }
-                }
-        }
-
-        private fun cleanupOldCircles() {
-            val currentTime = System.currentTimeMillis()
+        fun removeCircle(circleId: String) {
             val currentState = _uiState.value
-            val filteredCircles =
-                currentState.displayCircles.filter {
-                    currentTime - it.createdAt <= CIRCLE_DISPLAY_DURATION_MS
-                }
-
-            if (filteredCircles.size != currentState.displayCircles.size) {
-                _uiState.value = currentState.copy(displayCircles = filteredCircles)
-            }
+            val filteredCircles = currentState.displayCircles.filterNot { it.id == circleId }
+            _uiState.value = currentState.copy(displayCircles = filteredCircles)
         }
 
         private fun addCircleForEvent(event: RecentChangeEvent) {
@@ -195,6 +171,5 @@ class RecentChangesViewModel
             super.onCleared()
             Log.i(TAG, "ViewModel onCleared.")
             stopListeningToRecentChanges()
-            circleCleanupJob?.cancel()
         }
     }

@@ -78,6 +78,9 @@ class MainActivity : ComponentActivity() {
             RecentChangesScreen(
                 displayCircles = uiState.displayCircles,
                 recentChangeTexts = uiState.recentChangeTexts,
+                onCircleAnimationFinished = { circleId ->
+                    recentChangesViewModel.removeCircle(circleId)
+                },
             )
         }
     }
