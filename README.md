@@ -25,18 +25,43 @@ Originally created as a web application by Stephen LaPorte and Mahmoud Hashemi, 
   - [Faust](https://faust.grame.fr/) DSP language for audio synthesis
   - [Google Oboe](https://github.com/google/oboe) for low-latency audio
 - **Networking**: Ktor client with SSE (Server-Sent Events) support
-- **Architecture**: MVVM pattern with LiveData and ViewModels
+- **Architecture**: MVVM pattern with LiveData, ViewModels, and Hilt dependency injection
+- **Dependency Injection**: Hilt (Dagger-based) for clean architecture and testability
+
+### Architecture Overview
+
+The app follows Clean Architecture principles with clear separation of concerns:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Presentation  │    │    Domain       │    │      Data       │
+│                 │    │                 │    │                 │
+│ • MainActivity  │◄──►│ • Repository    │◄──►│ • SSE Service   │
+│ • Compose UI    │    │ • ViewModel     │    │ • Network Layer │
+│ • Screens       │    │ • Use Cases     │    │ • Data Sources  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         ▲                       ▲                       ▲
+         │                       │                       │
+    ┌────────────────────────────────────────────────────────┐
+    │              Hilt Dependency Injection                 │
+    │  • @HiltAndroidApp Application                         │
+    │  • @AndroidEntryPoint Activities                       │
+    │  • @HiltViewModel ViewModels                           │
+    │  • @Module for providing dependencies                  │
+    └────────────────────────────────────────────────────────┘
+```
 
 ### Audio Processing Chain
    ```
-   Wikipedia Event → Kotlin Logic → JNI → Faust DSP → Oboe → Audio Hardware
+   Wikipedia Event → Repository → ViewModel → JNI → Faust DSP → Oboe → Audio Hardware
    ```
 
 ### Dependencies
 
 - **Android**: API 24+ (Android 7.0), targeting API 36
 - **Jetpack Compose**: Latest stable BOM (2025.07.00)
-- **Ktor**: 3.2.2 for HTTP client and SSE support
+- **Ktor**: 3.2.3 for HTTP client and SSE support
+- **Hilt**: 2.57 for dependency injection
 - **Oboe**: 1.9.3 for high-performance audio
 - **Kotlin Serialization**: For JSON parsing of Wikipedia events
 
@@ -51,6 +76,8 @@ Originally created as a web application by Stephen LaPorte and Mahmoud Hashemi, 
 
 ### For Android Developers
 - **Modern Android practices**: Showcases Jetpack Compose, ViewModels, and Kotlin coroutines
+- **Clean Architecture**: Repository pattern, dependency injection, and separation of concerns
+- **Hilt DI**: Complete example of Hilt setup with modules, scoped dependencies, and ViewModels
 - **NDK integration**: Real-world example of JNI bindings and native library integration
 - **Audio programming**: Professional audio development with Oboe and low-latency considerations
 - **Real-time data**: SSE implementation for live streaming data
