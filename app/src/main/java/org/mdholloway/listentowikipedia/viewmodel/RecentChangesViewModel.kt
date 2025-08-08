@@ -1,13 +1,14 @@
 package org.mdholloway.listentowikipedia.viewmodel
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.DspFaust.DspFaust
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -29,11 +30,11 @@ class RecentChangesViewModel
             private const val MAX_DISPLAY_MESSAGES = 3
         }
 
-        private val _latestRecentChangeEvent = MutableLiveData<RecentChangeEvent?>(null)
-        val latestRecentChangeEvent: LiveData<RecentChangeEvent?> = _latestRecentChangeEvent
+        private val _latestRecentChangeEvent = MutableStateFlow<RecentChangeEvent?>(null)
+        val latestRecentChangeEvent: StateFlow<RecentChangeEvent?> = _latestRecentChangeEvent.asStateFlow()
 
-        private val _recentChangeTextList = MutableLiveData<List<String>>(emptyList())
-        val recentChangeTextList: LiveData<List<String>> = _recentChangeTextList
+        private val _recentChangeTextList = MutableStateFlow<List<String>>(emptyList())
+        val recentChangeTextList: StateFlow<List<String>> = _recentChangeTextList.asStateFlow()
 
         private var recentChangesJob: Job? = null
         private val dsp = DspFaust()
@@ -63,7 +64,7 @@ class RecentChangesViewModel
                             val midiNote = calculateMidiNoteFromBytes(diff)
                             dsp.keyOn(midiNote, 100)
 
-                            _latestRecentChangeEvent.postValue(event)
+                            _latestRecentChangeEvent.value = event
                             addEventToTextList(event)
                         }
                     }.catch { e ->
@@ -72,13 +73,13 @@ class RecentChangesViewModel
         }
 
         private fun addEventToTextList(event: RecentChangeEvent) {
-            val currentList = _recentChangeTextList.value.orEmpty().toMutableList()
+            val currentList = _recentChangeTextList.value.toMutableList()
             val formattedMessage = formatRecentChangeEventForDisplay(event)
             currentList.add(0, formattedMessage) // Add to the beginning
             if (currentList.size > MAX_DISPLAY_MESSAGES) {
                 currentList.removeAt(currentList.size - 1) // Remove the oldest if over limit
             }
-            _recentChangeTextList.postValue(currentList)
+            _recentChangeTextList.value = currentList
         }
 
         private fun formatRecentChangeEventForDisplay(event: RecentChangeEvent): String {
