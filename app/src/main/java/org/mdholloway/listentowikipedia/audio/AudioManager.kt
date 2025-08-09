@@ -1,7 +1,6 @@
 package org.mdholloway.listentowikipedia.audio
 
 import android.util.Log
-import com.DspFaust.DspFaust
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 
@@ -9,7 +8,7 @@ import javax.inject.Inject
 class AudioManager
     @Inject
     constructor(
-        private val dspFaust: DspFaust,
+        private val audioEngine: AudioEngine,
     ) {
         companion object {
             private const val TAG = "AudioManager"
@@ -23,7 +22,7 @@ class AudioManager
          */
         fun start(): Boolean {
             if (!isStarted) {
-                isStarted = dspFaust.start()
+                isStarted = audioEngine.start()
                 Log.i(TAG, "Audio engine started: $isStarted")
             }
             return isStarted
@@ -34,7 +33,7 @@ class AudioManager
          */
         fun stop() {
             if (isStarted) {
-                dspFaust.stop()
+                audioEngine.stop()
                 isStarted = false
                 Log.i(TAG, "Audio engine stopped")
             }
@@ -50,7 +49,7 @@ class AudioManager
             velocity: Int,
         ) {
             if (isStarted) {
-                dspFaust.keyOn(midiNote, velocity)
+                audioEngine.keyOn(midiNote, velocity)
             } else {
                 Log.w(TAG, "Cannot play note: audio engine not started")
             }
