@@ -18,6 +18,12 @@ constraintlayout = "2.2.1"
 lifecycleLivedataKtx = "2.9.2"
 lifecycleViewmodelKtx = "2.9.2"
 hilt = "2.57"
+mockk = "1.14.5"
+turbine = "1.2.1"
+coroutinesTest = "1.10.2"
+truth = "1.4.4"
+archCoreTesting = "2.2.0"
+hiltTesting = "2.57"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -49,6 +55,13 @@ androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifec
 oboe = { module = "com.google.oboe:oboe", version.ref = "oboe" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+truth = { module = "com.google.truth:truth", version.ref = "truth" }
+androidx-arch-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "archCoreTesting" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltTesting" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

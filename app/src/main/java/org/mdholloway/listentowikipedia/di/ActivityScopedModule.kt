@@ -8,6 +8,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.scopes.ActivityScoped
+import org.mdholloway.listentowikipedia.audio.AudioEngine
+import org.mdholloway.listentowikipedia.audio.DspFaustEngine
 import org.mdholloway.listentowikipedia.network.SseManager
 
 @Module
@@ -16,6 +18,10 @@ object ActivityScopedModule {
     @Provides
     @ActivityScoped
     fun provideDspFaust(): DspFaust = DspFaust()
+
+    @Provides
+    @ActivityScoped
+    fun provideAudioEngine(dspFaust: DspFaust): AudioEngine = DspFaustEngine(dspFaust)
 
     @Provides
     @ActivityScoped
