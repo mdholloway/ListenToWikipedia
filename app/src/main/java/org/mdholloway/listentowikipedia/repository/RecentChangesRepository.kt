@@ -1,7 +1,6 @@
 package org.mdholloway.listentowikipedia.repository
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import org.mdholloway.listentowikipedia.network.SseManager
 import javax.inject.Inject
