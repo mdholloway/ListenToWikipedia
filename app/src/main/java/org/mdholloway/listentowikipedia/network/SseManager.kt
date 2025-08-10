@@ -3,7 +3,6 @@ package org.mdholloway.listentowikipedia.network
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
-import dagger.hilt.android.scopes.ActivityScoped
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.defaultRequest
@@ -24,8 +23,9 @@ import kotlinx.serialization.json.Json
 import org.mdholloway.listentowikipedia.R
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import javax.inject.Inject
+import javax.inject.Singleton
 
-@ActivityScoped
+@Singleton
 class SseManager
     @Inject
     constructor(

@@ -41,8 +41,7 @@ class RecentChangesViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = RecentChangesViewModel(mockRepository)
-        viewModel.setAudioManager(mockAudioManager)
+        viewModel = RecentChangesViewModel(mockRepository, mockAudioManager)
     }
 
     @After

@@ -14,11 +14,13 @@ import org.mdholloway.listentowikipedia.network.SseManager
 
 class RecentChangesRepositoryTest {
     private val mockSseManager = mockk<SseManager>()
-    private val repository = RecentChangesRepository()
+    private val repository = RecentChangesRepository(mockSseManager)
 
     @Test
-    fun `listenToRecentChanges returns empty flow when no SseManager set`() =
+    fun `listenToRecentChanges returns empty flow when SseManager returns empty`() =
         runTest {
+            every { mockSseManager.recentChangeEvents } returns emptyFlow()
+
             repository.listenToRecentChanges().test {
                 awaitComplete()
             }
@@ -42,8 +44,6 @@ class RecentChangesRepositoryTest {
 
             every { mockSseManager.recentChangeEvents } returns flowOf(testEvent)
 
-            repository.setSseManager(mockSseManager)
-
             repository.listenToRecentChanges().test {
                 val receivedEvent = awaitItem()
                 assertThat(receivedEvent).isEqualTo(testEvent)
@@ -60,8 +60,6 @@ class RecentChangesRepositoryTest {
 
             every { mockSseManager.recentChangeEvents } returns flowOf(event1, event2, event3)
 
-            repository.setSseManager(mockSseManager)
-
             repository.listenToRecentChanges().test {
                 assertThat(awaitItem()).isEqualTo(event1)
                 assertThat(awaitItem()).isEqualTo(event2)
@@ -71,32 +69,9 @@ class RecentChangesRepositoryTest {
         }
 
     @Test
-    fun `setSseManager updates the manager reference`() =
-        runTest {
-            val event = createTestEvent()
-
-            every { mockSseManager.recentChangeEvents } returns flowOf(event)
-
-            // Initially returns empty flow
-            repository.listenToRecentChanges().test {
-                awaitComplete()
-            }
-
-            // After setting manager, should forward events
-            repository.setSseManager(mockSseManager)
-
-            repository.listenToRecentChanges().test {
-                assertThat(awaitItem()).isEqualTo(event)
-                awaitComplete()
-            }
-        }
-
-    @Test
     fun `listenToRecentChanges handles empty flow from SseManager`() =
         runTest {
             every { mockSseManager.recentChangeEvents } returns emptyFlow()
-
-            repository.setSseManager(mockSseManager)
 
             repository.listenToRecentChanges().test {
                 awaitComplete()

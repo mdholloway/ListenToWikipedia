@@ -1,19 +1,16 @@
 package org.mdholloway.listentowikipedia.viewmodel
 
 import android.util.Log
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.mdholloway.listentowikipedia.audio.AudioManager
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import org.mdholloway.listentowikipedia.repository.RecentChangesRepository
@@ -32,6 +29,7 @@ class RecentChangesViewModel
     @Inject
     constructor(
         val repository: RecentChangesRepository,
+        private val audioManager: AudioManager,
     ) : ViewModel() {
         companion object {
             private const val TAG = "RecentChangesViewModel"
@@ -43,7 +41,6 @@ class RecentChangesViewModel
         val uiState: StateFlow<RecentChangesUiState> = _uiState.asStateFlow()
 
         private var recentChangesJob: Job? = null
-        private var audioManager: AudioManager? = null
 
         fun removeCircle(circleId: String) {
             val currentState = _uiState.value
@@ -82,10 +79,6 @@ class RecentChangesViewModel
                 )
         }
 
-        fun setAudioManager(audioManager: AudioManager) {
-            this.audioManager = audioManager
-        }
-
         fun startListeningToRecentChanges() {
             if (recentChangesJob?.isActive == true) {
                 Log.i(TAG, "Already listening to recent changes, skipping start.")
@@ -102,7 +95,7 @@ class RecentChangesViewModel
                             // Calculate MIDI note based on byte difference
                             val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
                             val midiNote = calculateMidiNoteFromBytes(diff)
-                            audioManager?.playNote(midiNote, 100)
+                            audioManager.playNote(midiNote, 100)
 
                             addCircleForEvent(event)
                             addEventToTextList(event)

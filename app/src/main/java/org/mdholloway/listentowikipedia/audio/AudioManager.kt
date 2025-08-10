@@ -1,10 +1,10 @@
 package org.mdholloway.listentowikipedia.audio
 
 import android.util.Log
-import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
+import javax.inject.Singleton
 
-@ActivityScoped
+@Singleton
 class AudioManager
     @Inject
     constructor(

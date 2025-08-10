@@ -10,12 +10,8 @@ import javax.inject.Singleton
 @Singleton
 class RecentChangesRepository
     @Inject
-    constructor() {
-        private var sseManager: SseManager? = null
-
-        fun setSseManager(sseManager: SseManager) {
-            this.sseManager = sseManager
-        }
-
-        fun listenToRecentChanges(): Flow<RecentChangeEvent> = sseManager?.recentChangeEvents ?: emptyFlow()
+    constructor(
+        private val sseManager: SseManager,
+    ) {
+        fun listenToRecentChanges(): Flow<RecentChangeEvent> = sseManager.recentChangeEvents
     }

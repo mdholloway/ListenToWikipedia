@@ -66,10 +66,6 @@ class MainActivity : ComponentActivity() {
         // Create activity scope for SSE connection
         activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-        // Set managers in the ViewModel and Repository
-        recentChangesViewModel.setAudioManager(audioManager)
-        recentChangesViewModel.repository.setSseManager(sseManager)
-
         // Check and request permission on activity creation
         checkAndRequestPermission()
 

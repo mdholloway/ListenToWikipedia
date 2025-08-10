@@ -5,27 +5,31 @@ import com.DspFaust.DspFaust
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.qualifiers.ActivityContext
-import dagger.hilt.android.scopes.ActivityScoped
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import org.mdholloway.listentowikipedia.audio.AudioEngine
 import org.mdholloway.listentowikipedia.audio.DspFaustEngine
 import org.mdholloway.listentowikipedia.network.SseManager
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ActivityComponent::class)
-object ActivityScopedModule {
+@InstallIn(SingletonComponent::class)
+object SingletonModule {
     @Provides
-    @ActivityScoped
+    @Singleton
     fun provideDspFaust(): DspFaust = DspFaust()
 
     @Provides
-    @ActivityScoped
+    @Singleton
     fun provideAudioEngine(dspFaust: DspFaust): AudioEngine = DspFaustEngine(dspFaust)
+}
 
+@Module
+@InstallIn(SingletonComponent::class)
+object ApplicationModule {
     @Provides
-    @ActivityScoped
+    @Singleton
     fun provideSseManager(
-        @ActivityContext context: Context,
+        @ApplicationContext context: Context,
     ): SseManager = SseManager(context)
 }
