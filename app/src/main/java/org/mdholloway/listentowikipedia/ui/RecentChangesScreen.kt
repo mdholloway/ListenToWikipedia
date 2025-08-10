@@ -24,6 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -39,7 +44,12 @@ fun RecentChangesScreen(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0D1B2A)), // Dark blue background
+                .background(Color(0xFF0D1B2A)) // Dark blue background
+                .semantics {
+                    contentDescription =
+                        "Wikipedia recent changes visualization. Circles represent page edits with size based on change amount."
+                    role = androidx.compose.ui.semantics.Role.Image
+                },
     ) {
         displayCircles.forEach { displayCircle ->
             AnimatedCircle(
@@ -54,7 +64,11 @@ fun RecentChangesScreen(
                 Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp), // Adjust padding as needed
+                    .padding(bottom = 16.dp) // Adjust padding as needed
+                    .semantics {
+                        contentDescription = "Recent Wikipedia page edits list"
+                        liveRegion = LiveRegionMode.Polite
+                    },
         ) {
             LazyColumn(
                 modifier =
@@ -78,7 +92,16 @@ fun RecentChangesScreen(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 2.dp),
+                                .padding(vertical = 2.dp)
+                                .semantics {
+                                    contentDescription =
+                                        when (index) {
+                                            0 -> "Most recent edit: $text"
+                                            1 -> "Second most recent edit: $text"
+                                            2 -> "Third most recent edit: $text"
+                                            else -> "Edit: $text"
+                                        }
+                                },
                     )
                 }
             }
@@ -111,7 +134,28 @@ private fun AnimatedCircle(
                 onAnimationFinished()
             }
         }
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        Canvas(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .semantics {
+                        val changeType = if (displayCircle.event.bot) "bot edit" else "user edit"
+                        val userType =
+                            when {
+                                displayCircle.event.bot -> "by a bot"
+                                displayCircle.event.user.contains('.') -> "by an anonymous user"
+                                else -> "by user ${displayCircle.event.user}"
+                            }
+                        val changeSize =
+                            when {
+                                displayCircle.radius < 50 -> "small"
+                                displayCircle.radius < 100 -> "medium"
+                                else -> "large"
+                            }
+                        contentDescription = "$changeSize $changeType on ${displayCircle.event.title} $userType"
+                        role = androidx.compose.ui.semantics.Role.Image
+                    },
+        ) {
             // Ensure circle stays within bounds by accounting for radius
             val centerX =
                 (displayCircle.radius + (size.width - 2 * displayCircle.radius) * displayCircle.x).coerceIn(
