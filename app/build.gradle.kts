@@ -45,7 +45,6 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
-        viewBinding = true
         compose = true
         prefab = true
     }
@@ -87,8 +86,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.recyclerview)
-    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
