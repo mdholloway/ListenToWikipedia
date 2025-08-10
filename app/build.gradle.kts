@@ -19,7 +19,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "org.mdholloway.listentowikipedia.HiltTestRunner"
 
         externalNativeBuild {
             cmake {
@@ -56,6 +56,12 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
+        }
+    }
+    
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1,LICENSE.md,LICENSE.txt,NOTICE.txt,LICENSE-notice.md}"
         }
     }
 }
@@ -107,7 +113,9 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.turbine)
     androidTestImplementation(libs.truth)
     androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.androidx.arch.core.testing)
     kspAndroidTest(libs.hilt.android.compiler)
 }
