@@ -7,12 +7,20 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,13 +40,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import org.mdholloway.listentowikipedia.ui.state.ConnectionState
 import org.mdholloway.listentowikipedia.ui.state.DisplayCircle
+import org.mdholloway.listentowikipedia.ui.state.RecentChangesUiState
 
 @Composable
 fun RecentChangesScreen(
-    displayCircles: List<DisplayCircle>,
-    recentChangeTexts: List<String>,
+    uiState: RecentChangesUiState,
     onCircleAnimationFinished: (String) -> Unit = {},
+    onRetryConnection: () -> Unit = {},
 ) {
     Box(
         modifier =
@@ -51,7 +61,18 @@ fun RecentChangesScreen(
                     role = androidx.compose.ui.semantics.Role.Image
                 },
     ) {
-        displayCircles.forEach { displayCircle ->
+        // Connection status banner at the top
+        ConnectionStatusBanner(
+            connectionState = uiState.connectionState,
+            isRetrying = uiState.isRetrying,
+            onRetryClick = onRetryConnection,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter),
+        )
+
+        uiState.displayCircles.forEach { displayCircle ->
             AnimatedCircle(
                 displayCircle = displayCircle,
                 onAnimationFinished = { onCircleAnimationFinished(displayCircle.id) },
@@ -76,7 +97,7 @@ fun RecentChangesScreen(
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter),
             ) {
-                itemsIndexed(recentChangeTexts) { index, text ->
+                itemsIndexed(uiState.recentChangeTexts) { index, text ->
                     val textAlpha =
                         when (index) {
                             0 -> 0.5f // Most recent
@@ -173,6 +194,124 @@ private fun AnimatedCircle(
                 center = Offset(centerX, centerY),
                 radius = displayCircle.radius,
             )
+        }
+    }
+}
+
+@Composable
+private fun ConnectionStatusBanner(
+    connectionState: ConnectionState,
+    isRetrying: Boolean,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when (connectionState) {
+        is ConnectionState.Connecting -> {
+            ConnectingBanner(modifier = modifier)
+        }
+        is ConnectionState.Error -> {
+            ErrorBanner(
+                message = connectionState.message,
+                canRetry = connectionState.canRetry && !isRetrying,
+                isRetrying = isRetrying,
+                onRetryClick = onRetryClick,
+                modifier = modifier,
+            )
+        }
+        ConnectionState.Connected,
+        ConnectionState.Disconnected,
+        -> {
+            // No banner needed for these states
+        }
+    }
+}
+
+@Composable
+private fun ConnectingBanner(modifier: Modifier = Modifier) {
+    Box(
+        modifier =
+            modifier
+                .background(Color(0xFF1976D2)) // Blue connecting color
+                .padding(16.dp)
+                .semantics {
+                    contentDescription = "Connecting to Wikipedia live changes"
+                    liveRegion = LiveRegionMode.Polite
+                },
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                color = Color.White,
+                strokeWidth = 2.dp,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Connecting...",
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorBanner(
+    message: String,
+    canRetry: Boolean,
+    isRetrying: Boolean,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .background(Color(0xFFD32F2F)) // Red error color
+                .padding(16.dp)
+                .semantics {
+                    contentDescription = "Connection error: $message"
+                    liveRegion = LiveRegionMode.Assertive
+                },
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = message,
+                color = Color.White,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+
+            if (canRetry) {
+                if (isRetrying) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Button(
+                        onClick = onRetryClick,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = Color(0xFFD32F2F),
+                            ),
+                        modifier =
+                            Modifier.semantics {
+                                contentDescription = "Retry connection to Wikipedia live changes"
+                            },
+                    ) {
+                        Text("Retry", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
         }
     }
 }

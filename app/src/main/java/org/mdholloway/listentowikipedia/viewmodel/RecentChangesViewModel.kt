@@ -11,10 +11,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.mdholloway.listentowikipedia.audio.AudioManager
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
+import org.mdholloway.listentowikipedia.network.SseManager
 import org.mdholloway.listentowikipedia.repository.RecentChangesRepository
 import org.mdholloway.listentowikipedia.ui.state.CircleColors
+import org.mdholloway.listentowikipedia.ui.state.ConnectionState
 import org.mdholloway.listentowikipedia.ui.state.DisplayCircle
 import org.mdholloway.listentowikipedia.ui.state.RecentChangesUiState
 import org.mdholloway.listentowikipedia.util.isIpAddress
@@ -30,6 +33,7 @@ class RecentChangesViewModel
     constructor(
         val repository: RecentChangesRepository,
         private val audioManager: AudioManager,
+        private val sseManager: SseManager,
     ) : ViewModel() {
         companion object {
             private const val TAG = "RecentChangesViewModel"
@@ -41,6 +45,7 @@ class RecentChangesViewModel
         val uiState: StateFlow<RecentChangesUiState> = _uiState.asStateFlow()
 
         private var recentChangesJob: Job? = null
+        private var connectionStateJob: Job? = null
 
         fun removeCircle(circleId: String) {
             val currentState = _uiState.value
@@ -87,6 +92,13 @@ class RecentChangesViewModel
 
             Log.i(TAG, "Starting to listen to recent changes")
 
+            // Start listening to connection state changes
+            connectionStateJob =
+                sseManager.connectionState
+                    .onEach { connectionState ->
+                        _uiState.value = _uiState.value.copy(connectionState = connectionState)
+                    }.launchIn(viewModelScope)
+
             recentChangesJob =
                 repository
                     .listenToRecentChanges()
@@ -102,6 +114,14 @@ class RecentChangesViewModel
                         }
                     }.catch { e ->
                         Log.e(TAG, "Error collecting recent changes", e)
+                        _uiState.value =
+                            _uiState.value.copy(
+                                connectionState =
+                                    ConnectionState.Error(
+                                        message = "Error processing events: ${e.message}",
+                                        canRetry = true,
+                                    ),
+                            )
                     }.launchIn(viewModelScope)
         }
 
@@ -158,6 +178,19 @@ class RecentChangesViewModel
             Log.i(TAG, "Stopping listening to recent changes and cancelling job.")
             recentChangesJob?.cancel()
             recentChangesJob = null
+            connectionStateJob?.cancel()
+            connectionStateJob = null
+        }
+
+        fun retryConnection() {
+            Log.i(TAG, "User requested connection retry")
+            _uiState.value = _uiState.value.copy(isRetrying = true)
+            sseManager.retryConnection(viewModelScope)
+            // Reset retrying flag after a short delay
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(1000)
+                _uiState.value = _uiState.value.copy(isRetrying = false)
+            }
         }
 
         override fun onCleared() {

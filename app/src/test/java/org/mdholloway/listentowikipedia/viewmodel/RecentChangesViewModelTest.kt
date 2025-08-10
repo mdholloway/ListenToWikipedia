@@ -20,6 +20,7 @@ import org.junit.Test
 import org.mdholloway.listentowikipedia.audio.AudioManager
 import org.mdholloway.listentowikipedia.model.Length
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
+import org.mdholloway.listentowikipedia.network.SseManager
 import org.mdholloway.listentowikipedia.repository.RecentChangesRepository
 import org.mdholloway.listentowikipedia.testutil.AndroidLogRule
 import org.mdholloway.listentowikipedia.ui.state.CircleColors
@@ -35,13 +36,14 @@ class RecentChangesViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val mockRepository = mockk<RecentChangesRepository>()
     private val mockAudioManager = mockk<AudioManager>(relaxed = true)
+    private val mockSseManager = mockk<SseManager>(relaxed = true)
 
     private lateinit var viewModel: RecentChangesViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = RecentChangesViewModel(mockRepository, mockAudioManager)
+        viewModel = RecentChangesViewModel(mockRepository, mockAudioManager, mockSseManager)
     }
 
     @After

@@ -63,10 +63,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by recentChangesViewModel.uiState.collectAsState()
             RecentChangesScreen(
-                displayCircles = uiState.displayCircles,
-                recentChangeTexts = uiState.recentChangeTexts,
+                uiState = uiState,
                 onCircleAnimationFinished = { circleId ->
                     recentChangesViewModel.removeCircle(circleId)
+                },
+                onRetryConnection = {
+                    recentChangesViewModel.retryConnection()
                 },
             )
         }

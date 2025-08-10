@@ -1,9 +1,12 @@
 package org.mdholloway.listentowikipedia.ui
 
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -11,7 +14,9 @@ import org.junit.runner.RunWith
 import org.mdholloway.listentowikipedia.model.Length
 import org.mdholloway.listentowikipedia.model.RecentChangeEvent
 import org.mdholloway.listentowikipedia.ui.state.CircleColors
+import org.mdholloway.listentowikipedia.ui.state.ConnectionState
 import org.mdholloway.listentowikipedia.ui.state.DisplayCircle
+import org.mdholloway.listentowikipedia.ui.state.RecentChangesUiState
 
 @RunWith(AndroidJUnit4::class)
 class RecentChangesScreenTest {
@@ -22,8 +27,7 @@ class RecentChangesScreenTest {
     fun recentChangesScreen_displaysEmptyState() {
         composeTestRule.setContent {
             RecentChangesScreen(
-                displayCircles = emptyList(),
-                recentChangeTexts = emptyList(),
+                uiState = RecentChangesUiState(),
             )
         }
 
@@ -43,8 +47,10 @@ class RecentChangesScreenTest {
 
         composeTestRule.setContent {
             RecentChangesScreen(
-                displayCircles = emptyList(),
-                recentChangeTexts = testTexts,
+                uiState =
+                    RecentChangesUiState(
+                        recentChangeTexts = testTexts,
+                    ),
             )
         }
 
@@ -67,8 +73,10 @@ class RecentChangesScreenTest {
 
         composeTestRule.setContent {
             RecentChangesScreen(
-                displayCircles = emptyList(),
-                recentChangeTexts = testTexts.take(3), // RecentChangesViewModel limits to 3
+                uiState =
+                    RecentChangesUiState(
+                        recentChangeTexts = testTexts.take(3), // RecentChangesViewModel limits to 3
+                    ),
             )
         }
 
@@ -121,8 +129,10 @@ class RecentChangesScreenTest {
 
         composeTestRule.setContent {
             RecentChangesScreen(
-                displayCircles = testCircles,
-                recentChangeTexts = emptyList(),
+                uiState =
+                    RecentChangesUiState(
+                        displayCircles = testCircles,
+                    ),
                 onCircleAnimationFinished = { circleId ->
                     animationCallbackCount++
                 },
@@ -167,8 +177,10 @@ class RecentChangesScreenTest {
 
         composeTestRule.setContent {
             RecentChangesScreen(
-                displayCircles = listOf(testCircle),
-                recentChangeTexts = emptyList(),
+                uiState =
+                    RecentChangesUiState(
+                        displayCircles = listOf(testCircle),
+                    ),
                 onCircleAnimationFinished = { circleId ->
                     callbackCircleId = circleId
                     callbackCount++
@@ -214,8 +226,11 @@ class RecentChangesScreenTest {
 
         composeTestRule.setContent {
             RecentChangesScreen(
-                displayCircles = listOf(testCircle),
-                recentChangeTexts = testTexts,
+                uiState =
+                    RecentChangesUiState(
+                        displayCircles = listOf(testCircle),
+                        recentChangeTexts = testTexts,
+                    ),
             )
         }
 
@@ -226,5 +241,69 @@ class RecentChangesScreenTest {
 
         // Screen should render both circles and text without issues
         composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun recentChangesScreen_displaysConnectingState() {
+        composeTestRule.setContent {
+            RecentChangesScreen(
+                uiState =
+                    RecentChangesUiState(
+                        connectionState = ConnectionState.Connecting,
+                    ),
+            )
+        }
+
+        // Verify connecting banner is displayed
+        composeTestRule.onNodeWithText("Connecting...").assertIsDisplayed()
+    }
+
+    @Test
+    fun recentChangesScreen_displaysErrorStateWithRetryButton() {
+        var retryClicked = false
+
+        composeTestRule.setContent {
+            RecentChangesScreen(
+                uiState =
+                    RecentChangesUiState(
+                        connectionState =
+                            ConnectionState.Error(
+                                message = "Connection failed",
+                                canRetry = true,
+                            ),
+                    ),
+                onRetryConnection = { retryClicked = true },
+            )
+        }
+
+        // Verify error message is displayed
+        composeTestRule.onNodeWithText("Connection failed").assertIsDisplayed()
+
+        // Verify retry button is displayed and clickable
+        composeTestRule.onNodeWithText("Retry").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Retry").performClick()
+
+        assert(retryClicked) { "Retry callback should have been called" }
+    }
+
+    @Test
+    fun recentChangesScreen_showsRetryingState() {
+        composeTestRule.setContent {
+            RecentChangesScreen(
+                uiState =
+                    RecentChangesUiState(
+                        connectionState =
+                            ConnectionState.Error(
+                                message = "Connection failed",
+                                canRetry = true,
+                            ),
+                        isRetrying = true,
+                    ),
+            )
+        }
+
+        // When retrying, should show progress indicator instead of retry button
+        composeTestRule.onNodeWithText("Connection failed").assertIsDisplayed()
+        composeTestRule.onNode(hasText("Retry")).assertDoesNotExist()
     }
 }
