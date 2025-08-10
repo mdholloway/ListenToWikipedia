@@ -15,11 +15,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import org.mdholloway.listentowikipedia.audio.AudioManager
 import org.mdholloway.listentowikipedia.network.SseManager
 import org.mdholloway.listentowikipedia.ui.RecentChangesScreen
@@ -35,9 +32,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var sseManager: SseManager
-
-    // Coroutine scope for SSE connection
-    private var activityScope: CoroutineScope? = null
 
     private val requestPermissionLauncher =
         registerForActivityResult(
@@ -62,9 +56,6 @@ class MainActivity : ComponentActivity() {
             hide(WindowInsetsCompat.Type.navigationBars())
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
-
-        // Create activity scope for SSE connection
-        activityScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
         // Check and request permission on activity creation
         checkAndRequestPermission()
@@ -122,10 +113,7 @@ class MainActivity : ComponentActivity() {
         Log.i("MainActivity", "Starting audio engine and SSE connection")
 
         val audioStarted = audioManager.start()
-        val sseStarted =
-            activityScope?.let { scope ->
-                sseManager.start(scope)
-            } ?: false
+        val sseStarted = sseManager.start(lifecycleScope)
 
         if (audioStarted && sseStarted) {
             recentChangesViewModel.startListeningToRecentChanges()
@@ -140,12 +128,5 @@ class MainActivity : ComponentActivity() {
         recentChangesViewModel.stopListeningToRecentChanges()
         audioManager.stop()
         sseManager.stop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        // Clean up activity scope
-        activityScope?.cancel()
-        activityScope = null
     }
 }
