@@ -2,7 +2,6 @@ package org.mdholloway.listentowikipedia.testutil
 
 import android.util.Log
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import org.junit.rules.TestRule
