@@ -80,36 +80,36 @@ class AudioManagerTest {
     }
 
     @Test
-    fun `playNote calls AudioEngine keyOn when engine is running`() {
+    fun `playWikipediaEdit calls AudioEngine playWikipediaEdit when engine is running`() {
         every { mockAudioEngine.start() } returns true
         audioManager.start()
 
-        audioManager.playNote(60, 100)
+        audioManager.playWikipediaEdit(100, true, 0.5f)
 
-        verify { mockAudioEngine.keyOn(60, 100) }
+        verify { mockAudioEngine.playWikipediaEdit(100, true, 0.5f) }
     }
 
     @Test
-    fun `playNote does not call AudioEngine keyOn when engine is not running`() {
+    fun `playWikipediaEdit does not call AudioEngine when engine is not running`() {
         // Engine not started
-        audioManager.playNote(60, 100)
+        audioManager.playWikipediaEdit(100, true, 0.5f)
 
-        verify(exactly = 0) { mockAudioEngine.keyOn(any(), any()) }
+        verify(exactly = 0) { mockAudioEngine.playWikipediaEdit(any(), any(), any()) }
     }
 
     @Test
-    fun `playNote handles valid MIDI range`() {
+    fun `playWikipediaEdit handles different edit types and sizes`() {
         every { mockAudioEngine.start() } returns true
         audioManager.start()
 
-        // Test boundary values
-        audioManager.playNote(0, 0) // Min values
-        audioManager.playNote(127, 127) // Max values
-        audioManager.playNote(60, 64) // Middle C, medium velocity
+        // Test different scenarios
+        audioManager.playWikipediaEdit(50, true) // Small addition
+        audioManager.playWikipediaEdit(1000, false, 0.8f) // Large deletion
+        audioManager.playWikipediaEdit(5000, true, 1.0f) // Very large addition
 
-        verify { mockAudioEngine.keyOn(0, 0) }
-        verify { mockAudioEngine.keyOn(127, 127) }
-        verify { mockAudioEngine.keyOn(60, 64) }
+        verify { mockAudioEngine.playWikipediaEdit(50, true, 1.0f) } // Default volume
+        verify { mockAudioEngine.playWikipediaEdit(1000, false, 0.8f) }
+        verify { mockAudioEngine.playWikipediaEdit(5000, true, 1.0f) }
     }
 
     @Test

@@ -88,8 +88,8 @@ class RecentChangesViewModelTest {
             assertThat(updatedState.recentChangeTexts).hasSize(1)
             assertThat(updatedState.recentChangeTexts[0]).contains("TestUser added 50 bytes")
 
-            // Verify audio was played
-            verify { mockAudioManager.playNote(any(), 100) }
+            // Verify audio was played with correct parameters (50 bytes addition)
+            verify { mockAudioManager.playWikipediaEdit(50, true) }
         }
 
     @Test

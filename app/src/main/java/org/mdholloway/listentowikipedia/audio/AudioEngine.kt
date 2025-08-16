@@ -5,8 +5,9 @@ interface AudioEngine {
 
     fun stop()
 
-    fun keyOn(
-        midiNote: Int,
-        velocity: Int,
+    fun playWikipediaEdit(
+        sizeBytes: Int,
+        isAddition: Boolean = true,
+        volume: Float = 1.0f,
     )
 }

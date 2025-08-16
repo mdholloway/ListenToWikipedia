@@ -40,18 +40,21 @@ class AudioManager
         }
 
         /**
-         * Plays a MIDI note if the audio engine is running.
-         * @param midiNote MIDI note number (0-127)
-         * @param velocity Note velocity (0-127)
+         * Plays a sound for a Wikipedia edit with the given size in bytes.
+         * Uses the same pitch calculation algorithm as the original Listen to Wikipedia web app.
+         * @param sizeBytes The size of the edit in bytes
+         * @param isAddition Whether this is an addition (true) or deletion (false)
+         * @param volume Volume level (0.0-1.0)
          */
-        fun playNote(
-            midiNote: Int,
-            velocity: Int,
+        fun playWikipediaEdit(
+            sizeBytes: Int,
+            isAddition: Boolean = true,
+            volume: Float = 1.0f,
         ) {
             if (isStarted) {
-                audioEngine.keyOn(midiNote, velocity)
+                audioEngine.playWikipediaEdit(sizeBytes, isAddition, volume)
             } else {
-                Log.w(TAG, "Cannot play note: audio engine not started")
+                Log.w(TAG, "Cannot play Wikipedia edit sound: audio engine not started")
             }
         }
 
