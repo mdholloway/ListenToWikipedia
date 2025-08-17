@@ -23,7 +23,11 @@ android {
 
         externalNativeBuild {
             cmake {
-                arguments("-DANDROID_STL=c++_shared")
+                arguments(
+                    "-DANDROID_STL=c++_shared",
+                    "-DCMAKE_IGNORE_PATH=/usr;/usr/local",
+                    "-DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON",
+                )
             }
         }
     }
@@ -60,6 +64,9 @@ android {
     }
     
     packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1,LICENSE.md,LICENSE.txt,NOTICE.txt,LICENSE-notice.md}"
         }
@@ -94,10 +101,14 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.oboe)
     implementation(libs.hilt.android)
+    implementation("org.mdholloway:ogg:1.0.0")
+    implementation("org.mdholloway:vorbis:1.0.0")
     ksp(libs.hilt.android.compiler)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    debugImplementation("org.mdholloway:ogg:1.0.0-debug")
+    debugImplementation("org.mdholloway:vorbis:1.0.0-debug")
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

@@ -24,7 +24,6 @@ import org.mdholloway.listentowikipedia.util.isIpAddress
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.abs
-import kotlin.math.ln
 import kotlin.random.Random
 
 @HiltViewModel
@@ -104,10 +103,11 @@ class RecentChangesViewModel
                     .listenToRecentChanges()
                     .onEach { event ->
                         if (event.wiki == "enwiki" && event.namespace == 0 && event.type == "edit") {
-                            // Calculate MIDI note based on byte difference
+                            // Play sound based on edit size using Wikipedia's original algorithm
                             val diff = event.length?.let { it.new - (it.old ?: 0) } ?: 0
-                            val midiNote = calculateMidiNoteFromBytes(diff)
-                            audioManager.playNote(midiNote, 100)
+                            val sizeBytes = abs(diff)
+                            val isAddition = diff >= 0
+                            audioManager.playWikipediaEdit(sizeBytes, isAddition)
 
                             addCircleForEvent(event)
                             addEventToTextList(event)
@@ -147,31 +147,6 @@ class RecentChangesViewModel
             } else {
                 return "$user removed $bytes bytes from ${event.title}"
             }
-        }
-
-        // Helper function to map byte differences to a MIDI note number
-        private fun calculateMidiNoteFromBytes(byteDiff: Int): Int {
-            val absDiff = abs(byteDiff)
-
-            // Define your desired byte difference range and MIDI note range
-            val minBytes = 1 // Smallest diff you want to map
-            val maxBytes = 5000 // Largest diff you expect
-            val minMidiNote = 36 // C2 (low but audible)
-            val maxMidiNote = 96 // C7 (high and clear)
-
-            // Clamp the byteDiff to stay within a reasonable range for mapping
-            val clampedDiff = absDiff.coerceIn(minBytes, maxBytes)
-
-            // Use logarithmic scaling for pitch perception
-            // Map clampedDiff (log scale) to normalized 0-1 range
-            val normalizedValue =
-                (ln(clampedDiff.toFloat()) - ln(minBytes.toFloat())) /
-                    (ln(maxBytes.toFloat()) - ln(minBytes.toFloat()))
-
-            // Map normalized 0-1 range to MIDI note range (inverted: larger edits = lower notes)
-            val midiNote = maxMidiNote - (normalizedValue * (maxMidiNote - minMidiNote)).toInt()
-
-            return midiNote.coerceIn(0, 127) // Ensure valid MIDI range
         }
 
         fun stopListeningToRecentChanges() {
